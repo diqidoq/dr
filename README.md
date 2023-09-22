@@ -2,7 +2,7 @@
 Drupal Install (di) is a simple sh based command line tool in combination of Drush and Composer commands to unify installing Drupal extensions in terminal. At the moment targeted to bash but mainly with sh* cross compatible commands.
 
 # How to install
-Simply clone this repo and move di & dr to your user bin folder or create one if if don't have one. Make sure this bin folder is added to your PATH and di and dr are set as executables.
+Simply clone this repo and move di & dr to your command line tools fodler, mostly common is the user bin folder. Or create one if you don't have one. Make sure this bin folder is added to your PATH and di and dr are set as executables. If you are new to this read about executable scripts and how to access them on your machine. Seach engines are full of tutorials on this.
 
 # Requirements
 Composer and Drush accessable in your Drupal ^8|^9|^10 root.
