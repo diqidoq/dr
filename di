@@ -58,7 +58,7 @@ drush_routine () {
   if ! command -v drush &> /dev/null ; then
     printf "${g}Drush${w} seems ${r}not to be installed${w} in your Drupal installation or\n you missed to install the Drush Launcher like recommended in the install README of -di-.\n" ; SKIPPED
   else
-    CHOOSE "${1}able ${ARGS[@]} via Drush"
+    CHOOSE "${1}able ${ARGS} via Drush"
     if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
       drush ${1} $(for i in "${ARGS[@]}"; do printf " $i" ; done)
       CHOOSE "clear Drupal caches" ; [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cr || SKIPPED
@@ -71,7 +71,7 @@ drush_routine () {
 
 # Drupal specific Composer routine consuming argument require or remove.
 composer_drupal_routine () {
-  CHOOSE "${1} ${ARGS[@]} via composer"
+  CHOOSE "${1} ${ARGS} via composer"
   [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && composer ${1} $(for i in "${ARGS[@]}"; do printf " drupal/$i" ; done) || SKIPPED
 }
 
