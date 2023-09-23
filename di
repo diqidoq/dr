@@ -11,31 +11,37 @@ c='\033[0;36m'
 w='\033[0m'
 
 # some repeatable strings and interaction commands
-YESNO () { read -p " yY(es)/nN(o): " -n 1 -r && printf "\n" }
-CHOOSE () { printf "\nDo you want to ${g}${1}${w}?" && YESNO }
-SKIPPED () { printf "\nOk. ${g}Skipped${w} for now.\n." }
+YESNO () {
+  read -p " yY(es)/nN(o): " -n 1 -r
+  }
+CHOOSE () {
+  printf "\nDo you want to ${g}${1}${w}?" ; YESNO
+  }
+SKIPPED () {
+  printf "\nOk. ${g}Skipped${w} for now.\n."
+  }
 STOPERROR="${r}Error: Stopped (di) Drupal Install command!${w}"
 PRESSENTER="[Press ${g}ENTER${w} or ${g}RETURN${w} to go ahead. PRESS ${g}CTRL/C${w} to stop]"
 
 if ! command -v composer &> /dev/null ; then
   printf "\n${STOPERROR}\nComposer command could not be found.\n\n"
   exit 1
-elif [[ ! -d "vendor/composer" ]]; then
+elif [[ ! -d "vendor/composer" ]] ; then
   printf "\n${STOPERROR}\nAre we in project root? The ${g}vendor/composer${w} directory is missing here in path.\n\n"
   exit 1
-elif [[ ! -f "composer.json" ]]; then
+elif [[ ! -f "composer.json" ]] ; then
   printf "\n${STOPERROR}\nAre we in project root? The ${g}composer.json${w} file does not exist here in path.\n\n"
   exit 1
-elif [ "$#" -eq 0 ]; then
+elif [ "$#" -eq 0 ] ; then
   printf "\n${STOPERROR}\nArguments Count: 0 - No arguments provided.\n\n"
   exit 1
 fi
 
 getargs () {
-# To collect anf fix arguments input like 1, 2,3 4 5
-# so that it will be interpreted like 1 2 3 4 5 (as 5 arguments)
-# we do some string split replace and prepare an array.
-EXT=$@
+  # To collect anf fix arguments input like 1, 2,3 4 5
+  # so that it will be interpreted like 1 2 3 4 5 (as 5 arguments)
+  # we do some string split replace and prepare an array.
+  EXT=$@
 if [[ $EXT == *","* ]] ; then
   printf "\n${r}Attention:${w} Seems that you used ${r}comma to provide multiple arguments.${w}\nDo you want to go ahead with seperated arguments? ${PRESSENTER}"
   read -p " ... "
