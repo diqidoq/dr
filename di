@@ -85,7 +85,7 @@ remove () {
   composer_drupal_routine remove
 }
 
-[[ "${1}" == '-r' ]] && echo "found." || echo "not found."
+[[ "${1}" == '-r' ]] && shift ; echo "found." || echo "not found."
 # && shift ; getargs ; remove || getargs ; install
 
 printf "\n${g}Done!${w}\n"
