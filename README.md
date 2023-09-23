@@ -1,11 +1,15 @@
 # di
-Drupal Install (di) is a simple sh based command line tool in combination of Drush and Composer commands to unify installing Drupal extensions in terminal. At the moment targeted to bash but mainly with sh* cross compatible commands.
+Drupal Install (di) is a simple sh based command line tool which combines terminal repo checks and tasks with commands of Drush and Composer to unify and abbreviate (short) the daily experience of installing Drupal extensions in terminal. 
+
+NOTE: At the moment targeted mainly to bin/bash and Drupal modules but mainly with sh* cross compatible commands. So cross compatibility to other shells and other extensions support like Drupal>Composer dependencies are planned. Feel free to contribute to it.
 
 ## How to install
 Simply clone this repo (or download it) and move di & dr to your command line tools folder, mostly common is the user bin folder. Or create one if you don't have one. Make sure this bin folder is added to your PATH and di and dr are set as executables. If you are new to this read about executable scripts and how to access them on your machine. Seach engines are full of tutorials on this.
 
 ## Requirements
-[Composer](https://getcomposer.org) and [Drush](https://www.drush.org) accessable in your Drupal ^8|^9|^10 root. Note: You need [Drush Launcher](https://github.com/drush-ops/drush-launcher) added to Drush so that the script detects Drush correctly. Aliases and sym links to Drush will be ignored.
+[Composer](https://getcomposer.org) and [Drush](https://www.drush.org) accessable in your Drupal ^8|^9|^10 root. 
+
+NOTE: You need [Drush Launcher](https://github.com/drush-ops/drush-launcher) added to Drush so that the script detects Drush correctly. Aliases and sym links to Drush will be ignored.
 
 ## How to use
 Simply type ```di extension-machine-name``` or ```di extension-machine-name1 extension-machine-name2``` or ```di extension-machine-name1, extension-nachine-name2``` to require a Drupal module or other extension via Composer and it will do the rest for you with help of Composer, some PHP and some checks and Drush.
