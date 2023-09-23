@@ -10,6 +10,10 @@ c='\033[0;36m'
 # Clear the color after that
 w='\033[0m'
 
+# some repeatable strings and interaction commands
+YESNO () { read -p " yY(es)/nN(o): " -n 1 -r && printf "\n" }
+CHOOSE () { printf "\nDo you want to ${g}${1}${w}?" && YESNO }
+SKIPPED () { printf "\nOk. ${g}Skipped${w} for now.\n." }
 STOPERROR="${r}Error: Stopped (di) Drupal Install command!${w}"
 PRESSENTER="[Press ${g}ENTER${w} or ${g}RETURN${w} to go ahead. PRESS ${g}CTRL/C${w} to stop]"
 
@@ -45,15 +49,17 @@ read -ra ARGS <<< "$EXT"
 composer require $(for i in "${ARGS[@]}"; do printf " drupal/$i" ; done)
 
 if ! command -v drush &> /dev/null ; then
-  printf "${g}Drush${w} seems ${r}not to be installed${w} in your Drupal installation. So enabling Drupal extension via Drush has been left out of this procedure this time.\n\n"
+  printf "${g}Drush${w} seems ${r}not to be installed${w} in your Drupal installation or you missed to install the Drush Launcher like recommended in the install README of -di-. So enabling Drupal extension via Drush has been left out of this procedure this time. You can enable the modules by simply going back one command in terminal history (shift up) and replace -di- with -drush en-.\n\n"
 else
-  printf "\nDo you want to ${g}enable the extensions via Drush (pm-install)${w}?"
-  read -p " Y(es)/N(o): " REPLY
-
+  CHOOSE "enable the extensions via Drush (pm-install)"
   if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
-    drush en $(for i in "${ARGS[@]}"; do printf " $i" ; done) && drush cr && drush cron
+    drush en $(for i in "${ARGS[@]}"; do printf " $i" ; done)
+    CHOOSE "clear Drupal caches"
+      [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cr || SKIPPED
+    CHOOSE "run Drupal cron"
+      [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cron || SKIPPED
   else
-    printf "\n${g}Ok, Let's finish without installing.${w}\n"
+    SKIPPED
   fi
 fi
 
