@@ -31,7 +31,8 @@ elif [ "$#" -eq 0 ]; then
   exit 1
 fi
 
-# To fix confusing arguments input like 1, 2,3 4 5
+getargs () {
+# To collect anf fix arguments input like 1, 2,3 4 5
 # so that it will be interpreted like 1 2 3 4 5 (as 5 arguments)
 # we do some string split replace and prepare an array.
 EXT=$@
@@ -41,27 +42,45 @@ if [[ $EXT == *","* ]] ; then
   EXT=$(sed 's/,/, /g' <<<"$EXT")
   EXT=$(sed 's/,//g' <<<"$EXT")
 fi
-  EXT=$(sed 's/  / /g' <<<"$EXT")
-
+EXT=$(sed 's/  / /g' <<<"$EXT")
 IFS=' '
 read -ra ARGS <<< "$EXT"
+}
 
-composer require $(for i in "${ARGS[@]}"; do printf " drupal/$i" ; done)
-
-if ! command -v drush &> /dev/null ; then
-  printf "${g}Drush${w} seems ${r}not to be installed${w} in your Drupal installation or you missed to install the Drush Launcher like recommended in the install README of -di-. So enabling Drupal extension via Drush has been left out of this procedure this time. You can enable the modules by simply going back one command in terminal history (shift up) and replace -di- with -drush en-.\n\n"
-else
-  CHOOSE "enable the extensions via Drush (pm-install)"
-  if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
-    drush en $(for i in "${ARGS[@]}"; do printf " $i" ; done)
-    CHOOSE "clear Drupal caches"
-      [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cr || SKIPPED
-    CHOOSE "run Drupal cron"
-      [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cron || SKIPPED
+# consumes argument en or dis (-able) inside install() or remove()
+drush_routine () {
+  if ! command -v drush &> /dev/null ; then
+    printf "${g}Drush${w} seems ${r}not to be installed${w} in your Drupal installation or\n 
+    you missed to install the Drush Launcher like recommended in the install README of -di-.\n" ; SKIPPED
   else
-    SKIPPED
+    CHOOSE "${1}able ${ARGS[@]} via Drush"
+    if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
+      drush ${1} $(for i in "${ARGS[@]}"; do printf " $i" ; done)
+      CHOOSE "clear Drupal caches" ; [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cr || SKIPPED
+      CHOOSE "run Drupal cron" ; [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cron || SKIPPED
+    else
+      SKIPPED
+    fi
   fi
-fi
+}
+
+# Drupal specific Composer routine consuming argument require or remove.
+composer_drupal_routine () {
+  CHOOSE "${1} ${ARGS[@]} via composer"
+  [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && composer ${1} $(for i in "${ARGS[@]}"; do printf " drupal/$i" ; done) || SKIPPED
+}
+
+install() {
+  composer_drupal_routine require
+  drush_routine en
+}
+
+remove () {
+  drush_routine dis
+  composer_drupal_routine remove
+}
+
+[[ "${1}" == '-r' ]] && shift ; getargs ; remove || getargs ; install
 
 printf "\n${g}Done!${w}\n"
 exit 0
