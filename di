@@ -10,14 +10,17 @@ c='\033[0;36m'
 # Clear the color after that
 w='\033[0m'
 
-STOPERROR="${r}Error: Stopped (di) Drupal Composer Install command!${w}"
+STOPERROR="${r}Error: Stopped (di) Drupal Install command!${w}"
 PRESSENTER="[Press ${g}ENTER${w} or ${g}RETURN${w} to go ahead. PRESS ${g}CTRL/C${w} to stop]"
 
-if [[ ! -d "vendor/composer" ]]; then
+if ! command -v composer &> /dev/null ; then
+  printf "${r}Composer command could not be found.${w} Stop Drupal Install command now.\n\n"
+  exit 1
+elif [[ ! -d "vendor/composer" ]]; then
   printf "\n${STOPERROR}\nAre we in project root? The ${g}vendor/composer${w} directory is missing here in path.\n\n"
   exit 1
 elif [[ ! -f "composer.json" ]]; then
-  printf "\n${STOPERROR}\nAre we in prohect root? The ${g}composer.json${w} file does not exist here in path.\n\n"
+  printf "\n${STOPERROR}\nAre we in project root? The ${g}composer.json${w} file does not exist here in path.\n\n"
   exit 1
 elif [ "$#" -eq 0 ]; then
   printf "\n${STOPERROR}\nArguments Count: 0 - No arguments provided.\n\n"
@@ -41,13 +44,17 @@ read -ra ARGS <<< "$EXT"
 
 composer require $(for i in "${ARGS[@]}"; do printf " drupal/$i" ; done)
 
-printf "\nDo you want to ${g}enable the extensions via Drush (pmi)${w} which you have required via Composer before?"
-read -p " Y(es)/N(o): " REPLY
-
-if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
-  drush en $(for i in "${ARGS[@]}"; do printf " $i" ; done) && drush cr && drush cron
+if ! command -v drush &> /dev/null ; then
+  printf "${g}Drush${w} seems ${r}not to be installed${w} in your Drupal installation. So enabling Drupal extension via Drush has been left out of this procedure this time.\n\n"
 else
-  printf "\n${g}Ok, Let's finish without installing.${w}\n"
+  printf "\nDo you want to ${g}enable the extensions via Drush (pm-install)${w}?"
+  read -p " Y(es)/N(o): " REPLY
+
+  if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
+    drush en $(for i in "${ARGS[@]}"; do printf " $i" ; done) && drush cr && drush cron
+  else
+    printf "\n${g}Ok, Let's finish without installing.${w}\n"
+  fi
 fi
 
 printf "\n${g}Done!${w}\n"
