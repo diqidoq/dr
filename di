@@ -14,7 +14,7 @@ STOPERROR="${r}Error: Stopped (di) Drupal Install command!${w}"
 PRESSENTER="[Press ${g}ENTER${w} or ${g}RETURN${w} to go ahead. PRESS ${g}CTRL/C${w} to stop]"
 
 if ! command -v composer &> /dev/null ; then
-  printf "${r}Composer command could not be found.${w} Stop Drupal Install command now.\n\n"
+  printf "\n${STOPERROR}\nComposer command could not be found.\n\n"
   exit 1
 elif [[ ! -d "vendor/composer" ]]; then
   printf "\n${STOPERROR}\nAre we in project root? The ${g}vendor/composer${w} directory is missing here in path.\n\n"
