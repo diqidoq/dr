@@ -56,8 +56,7 @@ read -ra ARGS <<< "$EXT"
 # consumes argument en or dis (-able) inside install() or remove()
 drush_routine () {
   if ! command -v drush &> /dev/null ; then
-    printf "${g}Drush${w} seems ${r}not to be installed${w} in your Drupal installation or\n 
-    you missed to install the Drush Launcher like recommended in the install README of -di-.\n" ; SKIPPED
+    printf "${g}Drush${w} seems ${r}not to be installed${w} in your Drupal installation or\n you missed to install the Drush Launcher like recommended in the install README of -di-.\n" ; SKIPPED
   else
     CHOOSE "${1}able ${ARGS[@]} via Drush"
     if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
