@@ -1,7 +1,9 @@
 # di
-Drupal Install (di) is a simple sh based command line tool which combines terminal repo checks and tasks with commands of Drush and Composer to unify and abbreviate (shorten) the daily experience of **installing** and **removing** of Drupal extensions in command line enviroments. 
+Drupal Install (di) is a simple sh based command line tool which combines terminal repo checks and tasks with commands of Drush and Composer to unify and abbreviate (shorten) the daily experience of **installing** and **removing** of Drupal extensions in command line enviroments. (Primary focused on simple "default version" installations of extensions without version specific arguments yet.)
 
-NOTE: At the moment the script is for Drupal extensions (no vendor tasks) only and targeted mainly to bash shell but with sh* cross compatible commands. Cross compatibility to other shells and other parts of a Drupal project like Drupal>Composer dependencies are planned. Feel free to contribute to it.
+We make spaghetti commands like ```composer require drupal/modul1 drupal/module2 drupal/module3 && drush en module1 module2 module3 && drush cr``` to simply ```di module1 module2 module3```. 
+
+NOTE: At the moment the script is for Drupal extensions only (no vendor packages) and is targeted mainly to bash shell, but with sh* cross compatible commands. Cross compatibility to other shells and other parts of a Drupal project packages like Drupal Composer dependencies are planned. Feel free to contribute to it.
 
 ## How to install
 Simply clone this repo (or download it) and move di & dr to your command line tools folder, mostly common is the user bin folder. Or create one if you don't have one. Make sure this bin folder is added to your PATH and di and dr are set as executables. If you are new to this read about executable scripts and how to access them on your machine. Seach engines are full of tutorials on this.
