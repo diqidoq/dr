@@ -12,7 +12,7 @@ w='\033[0m'
 
 # some repeatable strings and interaction commands
 YESNO () {
-  read -p " yY(es)/nN(o): " -n 1 -r
+  read -p " yY(es)/nN(o): " -n 1 -r ; printf "\n"
   }
 CHOOSE () {
   printf "\nDo you want to ${g}${1}${w}?" ; YESNO
@@ -37,11 +37,10 @@ elif [ "$#" -eq 0 ] ; then
   exit 1
 fi
 
-getargs () {
-  # To collect anf fix arguments input like 1, 2,3 4 5
-  # so that it will be interpreted like 1 2 3 4 5 (as 5 arguments)
-  # we do some string split replace and prepare an array.
-  EXT=$@
+# To collect anf fix arguments input like 1, 2,3 4 5
+# so that it will be interpreted like 1 2 3 4 5 (as 5 arguments)
+# we do some string split replace and prepare an array.
+EXT=$@
 if [[ $EXT == *","* ]] ; then
   printf "\n${r}Attention:${w} Seems that you used ${r}comma to provide multiple arguments.${w}\nDo you want to go ahead with seperated arguments? ${PRESSENTER}"
   read -p " ... "
@@ -51,10 +50,9 @@ fi
 EXT=$(sed 's/  / /g' <<<"$EXT")
 IFS=' '
 read -ra ARGS <<< "$EXT"
-}
 
 # consumes argument en or dis (-able) inside install() or remove()
-drush_routine () {
+function drush_routine () {
   if ! command -v drush &> /dev/null ; then
     printf "${g}Drush${w} seems ${r}not to be installed${w} in your Drupal installation or\n you missed to install the Drush Launcher like recommended in the install README of -di-.\n" ; SKIPPED
   else
@@ -70,22 +68,30 @@ drush_routine () {
 }
 
 # Drupal specific Composer routine consuming argument require or remove.
-composer_drupal_routine () {
+function composer_drupal_routine () {
   CHOOSE "${1} ${ARGS} via composer"
   [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && composer ${1} $(for i in "${ARGS[@]}"; do printf " drupal/$i" ; done) || SKIPPED
 }
 
-install() {
+function install () {
   composer_drupal_routine require
   drush_routine en
 }
 
-remove () {
+function remove () {
   drush_routine dis
   composer_drupal_routine remove
 }
 
-[[ "${1}" == "-r" ]] && shift ; getargs ; remove || getargs ; install
+# Check if user has provided the -r flag to invert the process from installing to removing.
+# Then shift so that the rest of the arguments can pass remove().
+# Otherwise run install with all passed arguments.
+if [[ "${ARGS[0]}" == "-r" ]] ; then 
+  shift
+  remove
+else
+  install
+fi
 
 printf "\n${g}Done!${w}\n"
 exit 0
