@@ -37,9 +37,9 @@ elif [ "$#" -eq 0 ] ; then
   exit 1
 fi
 
-# To collect anf fix arguments input like 1, 2,3 4 5
+# To collect and fix multiple arguments input like 1, 2,3 4 5
 # so that it will be interpreted like 1 2 3 4 5 (as 5 arguments)
-# we do some string split replace and prepare an array.
+# we do some string split replace and prepare an arguments array.
 EXT=$@
 if [[ $EXT == *","* ]] ; then
   printf "\n${r}Attention:${w} Seems that you used ${r}comma to provide multiple arguments.${w}\nDo you want to go ahead with seperated arguments? ${PRESSENTER}"
