@@ -1,7 +1,9 @@
 # di
 Drupal Install (di) is a simple sh based command line tool which combines terminal repo checks and tasks with commands of Drush and Composer to unify and abbreviate (shorten) the daily experience of **installing** and **removing** of Drupal extensions in command line enviroments. (Primary focused on simple "default version" installations of extensions without version specific arguments yet.)
 
-We make spaghetti commands like ```composer require drupal/modul1 drupal/module2 drupal/module3 && drush en module1 module2 module3 && drush cr``` to simply ```di module1 module2 module3```. 
+We make spaghetti commands like ```composer require drupal/modul1 drupal/module2 drupal/module3 && drush en module1 module2 module3 && drush cr``` to simply ```di module1 module2 module3```.
+
+But these are splitted tasks and will be confirmed so ```di module``` can also be used to simply enabling or disabling a module. The -r flag inverts the command and goes thru the process of disabling and removal.
 
 NOTE: At the moment the script is for Drupal extensions only (no vendor packages) and is targeted mainly to bash shell, but with sh* cross compatible commands. Cross compatibility to other shells and other parts of a Drupal project packages like Drupal Composer dependencies are planned. Feel free to contribute to it.
 
