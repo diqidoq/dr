@@ -1,5 +1,5 @@
 # di
-Drupal Install (di) is a simple sh based command line tool which combines terminal repo checks and tasks with commands of Drush and Composer to unify and abbreviate (short) the daily experience of **installing** and **removing** of Drupal extensions in command line enviroments. 
+Drupal Install (di) is a simple sh based command line tool which combines terminal repo checks and tasks with commands of Drush and Composer to unify and abbreviate (shorten) the daily experience of **installing** and **removing** of Drupal extensions in command line enviroments. 
 
 NOTE: At the moment the script is for Drupal extensions (no vendor tasks) only and targeted mainly to bash shell but with sh* cross compatible commands. Cross compatibility to other shells and other parts of a Drupal project like Drupal>Composer dependencies are planned. Feel free to contribute to it.
 
