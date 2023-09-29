@@ -16,7 +16,7 @@ NOTE: At the moment the install and removal part of the script is for Drupal ext
 ## How to install
 Simply clone the Github repository (or download it) which can be found under [https://github.com/diqidoq/di](https://github.com/diqidoq/di) and move or symlink the executable files inside bin/ to your command line tools folder. Common is the username/bin or /usr/local/bin folder. Or create one if you don't have one. Make sure this bin folder is added to your PATH and the command executables are set as executables with ```chmod u+x```. If you are new to this read about executable scripts and how to access them on your machine. Seach engines are full of tutorials on this. Using sym links has the advantage of using updated versions automatically on each git pull or new clone.
 
-## Example installation 
+### Example installation 
 If your executables folder would be under yourusername/bin and your default shell is bash, then the install commands what look like this:
 
 ```
