@@ -5,13 +5,13 @@ We make spaghetti commands like ```composer require drupal/modul1 drupal/module2
 
 But these are splitted tasks and will be confirmed so ```di module``` can also be used to simply enabling or disabling a module. For example: The -r flag inverts the command and goes thru the process of disabling and removal. The -tp flag lists all variants (bundle types) of your given entity type. And these commands have shortlink wrappers. So di -r can be called with dr, and di -bkp can be called with dbkp and so on.
 
-Project website: [https://diqidoq.github.io/di]
+Project website: [https://diqidoq.github.io/di](https://diqidoq.github.io/di)
 
 ### Limitations and future plans
-NOTE: At the moment the install and removal part of the script is for Drupal extensions only (no other vendor packages yet) and is targeted mainly to bash shell, but with sh* cross compatible commands. Cross compatibility to other shells and other parts of a Drupal project packages like Drupal Composer dependencies are planned. Feel free to contribute to it here on github.
+NOTE: At the moment the install and removal part of the script is for Drupal extensions only (no other vendor packages yet) and is targeted mainly to bash shell, but with sh* cross compatible commands and future plans. Cross compatibility to other shells and other parts of a Drupal project packages like Drupal Composer dependencies are planned. Feel free to contribute to it here on github.
 
 ## How to install
-Simply clone the Github repository (or download it) which can be found under [https://github.com/diqidoq/di] and move or symlink the executable files inside bin/ to your command line tools folder. Common is the username/bin or /usr/local/bin folder. Or create one if you don't have one. Make sure this bin folder is added to your PATH and the command executables are set as executables with ```chmod u+x```. If you are new to this read about executable scripts and how to access them on your machine. Seach engines are full of tutorials on this. Using sym links has the advantage of using updated versions automatically on each git pull or new clone.
+Simply clone the Github repository (or download it) which can be found under [https://github.com/diqidoq/di](https://github.com/diqidoq/di) and move or symlink the executable files inside bin/ to your command line tools folder. Common is the username/bin or /usr/local/bin folder. Or create one if you don't have one. Make sure this bin folder is added to your PATH and the command executables are set as executables with ```chmod u+x```. If you are new to this read about executable scripts and how to access them on your machine. Seach engines are full of tutorials on this. Using sym links has the advantage of using updated versions automatically on each git pull or new clone.
 
 ## Example installation 
 If your executables folder would be under yourusername/bin and your default shell is bash, then the install commands what look like this:
