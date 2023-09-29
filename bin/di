@@ -1,0 +1,355 @@
+#!/bin/bash
+
+di_init () {
+  # color variables
+  r='\033[0;31m';g='\033[0;32m';y='\033[0;33m';b='\033[0;34m';m='\033[0;35m';c='\033[0;36m'
+  # Clear the color by default
+  w='\033[0m'
+  # some repeatable strings and interaction commands
+  YESNO () {
+    read -p " yY(es)/nN(o): " -n 1 -r ; printf "\n"
+  }
+  ASK () {
+    printf "\nDo you want to ${g}${1}${w}?"
+  }
+  CONFIRM () {
+    ASK "${1}" ; YESNO
+  }
+  MULTICHOICE () {
+    ASK "${1}" ; read -p " (${2}): " -n 1 -r ; printf "\n"
+  }
+  SKIP () {
+    printf "\nOk. ${g}Skipped${w} for now.\n"
+  }
+  ABORD () {
+    printf "\n${g}Abord script${w} for now.\n" ; exit 1
+  }
+  INPROGRESS () { 
+    printf "This feature is unsupported yet but in progress." ; ABORD
+  }
+  DONE () {
+    printf "\n${g}Done!${w}\n\n"
+  }
+  WRONGINPUT () {
+    printf "Wrong input." ; ABORD
+  }
+  STOPERROR="${r}Error: Stopped (di) Drupal Install command!${w}"
+  PRESSENTER="[Press ${g}ENTER${w} or ${g}RETURN${w} to go ahead. PRESS ${g}CTRL/C${w} to stop]"
+  # @todo Which we can change programmatically on respective different tasks later.
+  label="extension(s)"
+}
+
+di_check () {
+  # Check if Composer exist and if we are in Composer/Drupal project root before continue.
+  # Order is intentional. Missing arguments can be wanted to dry run command.
+  if ! command -v composer &> /dev/null ; then
+    printf "\n${STOPERROR}\nComposer could not be found.\n\n" ; ABORD
+  elif [[ ! -f "composer.json" ]] ; then
+    printf "\n${STOPERROR}\nAre we in the proper Composer init root? A ${g}composer.json${w} file does not exist here in path.\n\n" ; ABORD
+  elif [[ ! -d "web/core" ]] ; then
+    printf "\n${STOPERROR}\nAre we in a Drupal project root? A ${g}web/core${w} directory does not exist here in path.\n\n" ; ABORD
+  fi
+}
+
+di_exec () {
+  # Checking for leading -flag in arguments to set modus operandi.
+  case "${1}" in
+    -r) # uninstall & remove selected modules | shortlink: dr
+      shift && di_parse $@ && di_remove
+      ;;
+    -c) # checkout module info for selected modules | shortlink: dc
+      shift && di_parse $@ && di_info
+      ;;
+    -n) # renew (update) for selected nodules | shortlink: dn
+      shift && di_parse $@ && di_update
+      ;;
+    -e) # list extensions filtered by argument or all | shortlink: de 
+      shift && di_drush_pmlist $1
+      ;;
+    -i)
+      shift && di_parse $@ && di_install
+      ;;
+    #
+    # Now flags without additional arguments, without selected extensions.
+    #
+    -s) # status overview | shortlink: ds
+      di_status
+      ;;
+    -u) # update all drupal/* -W | shortlink: dupd (for historical reasons)
+      di_update_all
+      ;;
+    -b) # backup of directory  & database. | shortlink dbkp
+      DI_MODE="backup"
+      INPROGRESS
+      ;;
+    -d)
+      di_drush_updb
+      ;;
+    -p) # repair all file permissions in project dir. shortlink dprm
+      di_permission_repair      
+      ;;
+    -w)
+      di_drush_warn
+      ;;
+    -f)
+      di_drush_err
+      ;;
+    -*)
+      WRONGINPUT
+      ;;
+    #
+    # finally the install mode again as default wich actually needs no flag and has no other shortlink than di itself.
+    #
+    *) # install and enable
+      di_parse $@ && di_install
+      ;;
+  esac
+}
+
+di_parse () {
+  if [ "$#" -eq 0 ] ; then
+    printf "\n${STOPERROR}\nArguments Count: 0 - No arguments provided.\n\n" ; ABORD
+  else
+    if [[ "${1}" == +(*.log|*.txt|*.csv) ]] ; then
+      while read line ; do
+        echo "${line}"
+      done < ${1}
+      exit 1
+    else
+      printf "You provided extension via input arguments (not via a file). Start parsing..."
+      Arguments=$@
+      # To collect and fix multiple arguments input like 1, 2,3 4 5
+      # so that it will be interpreted like 1 2 3 4 5 (as 5 arguments)
+      # we do some string split replace and prepare an arguments array.
+      if [[ $Arguments == *","* ]] ; then
+        # Let's confirm arguments repair and split on separator by the user - just in case.
+        printf "\n${r}Attention:${w} Seems that you used ${r}comma separated multiple arguments.${w}\n Some users use comma and space, some not. We will check and repair this. Do you want to go ahead? ${PRESSENTER}"
+        read -p " ... "
+        Arguments=$(sed 's/,/, /g' <<< "$Arguments")
+        Arguments=$(sed 's/,//g' <<< "$Arguments")
+      fi
+      # Final whitespace cleanup and conversion into Array.
+      Arguments=$(sed 's/  / /g' <<< "$Arguments")
+    fi
+    # @todo ? Let me know, does it work in your shell? Not sure about <<< in all *sh.
+    IFS=' '
+    read -ra Arguments_Array <<< "$Arguments"
+  fi
+}
+
+di_drush_cache_clear () {
+  CONFIRM "clear Drupal caches" ; [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cr || SKIP
+}
+
+di_drush_cron_run () {
+  CONFIRM "run Drupal cron" ; [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cron || SKIP
+}
+
+di_drush_pmlist () {
+  
+ # while getopts u:a:f: flag
+ # do
+  #  case "${flag}" in
+   #   c) username=${OPTARG};;
+    #  a) age=${OPTARG};;         
+     # f) fullname=${OPTARG};;
+   # esac
+ # done
+
+  if [ -z "${1}" ] ; then
+  CONFIRM "List all extensions (yes = including core, no = excluding core)" 
+  if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
+    drush pml --filter="${1}"
+  else
+    drush pml --no-core --filter="${1}"
+  fi
+  fi
+# else 
+  #fi
+}
+
+# consumes internal argument pm-install or pm-uninstall passed via install() or remove() function
+di_drush_routine () {
+  if ! command -v drush &> /dev/null ; then
+    printf "${g}Drush${w} seems ${r}not to be installed${w} in your Drupal installation or\n you missed to install the Drush Launcher or other Drush detection method like recommended in the install README of -di-.\n" ; SKIP
+  else
+    CONFIRM "${1} ${label} via Drush"
+    if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
+      drush ${1} $(for i in "${Arguments_Array[@]}"; do printf " $i" ; done)
+    else
+      SKIP
+    fi
+  fi
+}
+
+# Drupal specific Composer routine consuming internal argument require or remove.
+di_composer_drupal_routine () {
+  CONFIRM "${1} ${label} via Composer"
+  if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
+    composer ${1} $(for i in "${Arguments_Array[@]}"; do printf " drupal/$i" ; done) ${2}
+  else
+    SKIP
+  fi
+}
+
+di_composer_info_routine () {
+  CONFIRM "${1} ${label} information via Composer"
+  if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
+    # @todo for not *sh comptablie, change it to i=0 while []; do
+    for i in "${Arguments_Array[@]}"; do 
+      composer ${1} -a drupal/$i | grep -e descrip -e versions --color=auto && printf "\n-----------------------------------\n\n"
+    done
+  else
+    SKIP
+  fi
+}
+
+di_drush_warn () {
+  drush core:requirements --severity=1
+} # dwarn
+
+di_drush_err () {
+  drush core:requirements --severity=2
+} # derr
+
+di_composer_status () {
+  composer clear-cache
+  composer outdated
+  composer update --dry-run
+  compooser status
+}
+
+di_drush_status () {
+  di_drush_cache_clear
+  di_drush_cron_run
+  drush pm:security
+  drush config:status
+  di_drush_warn
+  di_drush_err
+}
+
+di_drush_eval_get_bundle_info () {
+  drush php-eval "print_r(array_keys(\Drupal::service('entity_type.bundle.info')->getBundleInfo('$1')));"
+}
+
+di_drush_updb () {
+  CONFIRM "update Drupal database"
+  if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
+    drush updb
+  else
+    SKIP
+  fi
+}
+
+di_permission_repair() {
+printf "
+Based on the following links:
+${r}
+https://www.drupal.org/node/244924
+https://bit.ly/3IZL6n1
+https://bit.ly/3K1WBeL
+https://bit.ly/3Dwimkx
+${g}
+...I'll repair Drupal directory and file permissions now recursively...
+${w}
+"
+  # Preprare variables like
+  # base_dir, logging directory, LOGFILE and timestamp.
+  #
+  BASEDIR=$(dirname "$0")
+  TIMESTAMP=$(date '+%y%m%d_%H%M%S')
+  LOGDIR=permission_repair_logs
+  mkdir -p ${LOGDIR}
+  LOGFILE=${LOGDIR}/${TIMESTAMP}.log
+  OUTPUT="\n${m}(NOTE: No output means that there was nothing to change.)${w}\n"
+  CONFIRM="\n${r}Press ENTER or RETURN to go ahead. Press CTRL and c to interrupt.${w}"
+
+  printf "\n${g}Will (re)set user and group of all folders and files to ${USER}:www-data first.${OUTPUT}${CONFIRM}" && read -p " Ok? "
+  sudo chown -c -R "${USER}":www-data web vendor | tee ${LOGFILE}
+
+  printf "\n${g}Correct ALL directories in web/ to u=rwx,g=rx,o= in the next step.${OUTPUT}${CONFIRM}" && read -p " Ok? "
+  find web/* -type d -exec sudo chmod -c u=rwx,g=rx,o= '{}' + | tee ${LOGFILE}
+  printf "\n${g}Correct ALL files in web/ to u=rw,g=r,o= in the next step.${OUTPUT}${CONFIRM}" && read -p " Ok? "
+  find web/* -type f -exec sudo chmod -c u=rw,g=r,o= '{}' + | tee ${LOGFILE}
+  
+  # Loop thru all web/sites/(*subdirs) having another subdir files/ in it.
+  for d in web/sites/*/files
+  do
+    printf "\n${g}Correct $d directory in the next step (owner www-data, group your-user, and rwx to both).${OUTPUT}${CONFIRM}" && read -p " Ok? "
+    sudo chown -c www-data:"${USER}" $d | tee ${LOGFILE}
+    sudo chmod -c ug=rwx,o= $d | tee ${LOGFILE}
+    printf "\n${g}Correct ALL sub directories inside of $d directory to ug=rwx,o= in the next step.${OUTPUT}${CONFIRM}" && read -p " Ok? "
+    find $d -type d -exec sudo chmod -c ug=rwx,o= '{}' + | tee ${LOGFILE}
+    printf "\n${g}Correct files inside of $d directory to ug=rw,o= in the next step.${OUTPUT}${CONFIRM}" && read -p " Ok? "
+    find $d -type f -exec sudo chmod -c ug=rw,o= '{}' + | tee ${LOGFILE}
+    printf "\n${g}Let's check if you have any suspicious php-files in your $d directory.${OUTPUT}${CONFIRM}" && read -p " Ok? "
+    if [[ -n $(find $d -type f -name "*.php*") ]] ; then printf "\n${r}Warning: found some php files!${w}\n" | tee ${LOGFILE} ; else printf "${g}Found none. All Ok.${w}\n" | tee ${LOGFILE} ; fi
+  done
+
+  printf "\n${g}Now let's correct premissions of the settings file and any htaccess files in the next step.${OUTPUT}${CONFIRM}" && read -p " Ok? "
+  find . -type f -name ".htaccess" -exec sudo chmod -c 440 '{}' + | tee ${LOGFILE}
+  chmod -v 440 web/sites/*/settings.php | tee ${LOGFILE}
+  
+  # diff -u ${logdir}/tree_before.txt ${logdir}/tree_after.txt >> ${logdir}/diff.txt 
+  # diff --color -u ${logdir}/before_after.txt ${logdir}/tree_after.txt
+
+  ls -ahl ${LOGDIR}
+}
+
+di_install () {
+  di_composer_info_routine info
+  di_composer_drupal_routine require
+  di_drush_routine pm-install
+  di_drush_cache_clear
+}
+
+di_update () {
+  di_drush_cron_run
+  di_composer_info_routine info
+  di_composer_drupal_routine update -W
+  di_drush_updb
+  di_drush_cache_clear
+}
+
+di_update_all () {
+  MULTICHOICE "update all, drupal only, interactive" "a/d/i"
+  case "${REPLY}" in
+    a)
+      composer update */* -W
+      ;;
+    d)
+      composer update drupal/* -W
+      ;;
+    i)
+      composer update --interactive
+      ;;
+    *)
+      WRONGINPUT
+      ;;
+  esac
+  di_drush_updb
+  di_drush_cache_clear
+}
+
+di_remove () {
+  di_drush_routine pm-uninstall
+  di_composer_drupal_routine remove
+  di_drush_cache_clear
+  di_drush_cron_run
+}
+
+di_info () {
+  di_composer_info_routine info
+}
+
+di_status () {
+  di_composer_status
+  di_drush_status
+}
+
+di_init
+di_check $@
+di_exec $@
+
+DONE && exit 0
+
