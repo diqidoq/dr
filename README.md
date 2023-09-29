@@ -5,8 +5,8 @@ We make spaghetti commands like ```composer require drupal/modul1 drupal/module2
 
 But these are splitted tasks and will be confirmed so ```di module``` can also be used to simply enabling or disabling a module. For example: The -r flag inverts the command and goes thru the process of disabling and removal. The -tp flag lists all variants (bundle types) of your given entity type. And these commands have shortlink wrappers. So di -r can be called with dr, and di -bkp can be called with dbkp and so on.
 
-Project website: [https://diqidoq.github.io/di](https://diqidoq.github.io/di)
-Github repository: [https://github.com/diqidoq/di](https://github.com/diqidoq/di)
+ - Project website: [https://diqidoq.github.io/di](https://diqidoq.github.io/di)
+ - Github repository: [https://github.com/diqidoq/di](https://github.com/diqidoq/di)
 
 **WARNING**: At the moment the script only supports Drupal project roots build like ```drupal/web/core``` with ```drupal/web/sites/default/files``` etc like provided by the Drupal Composer project-recommended repository. More variants of project trees are planned. This script has been initially developed for internal use in our offices only and we want to make it available public as a contribution to the wonderful Drupal community. So some tasks are still remaining for a full cross compatible public version yet.
 
