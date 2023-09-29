@@ -5,6 +5,8 @@ We make spaghetti commands like ```composer require drupal/modul1 drupal/module2
 
 But these are splitted tasks and will be confirmed so ```di module``` can also be used to simply enabling or disabling a module. For example: The -r flag inverts the command and goes thru the process of disabling and removal. The -tp flag lists all variants (bundle types) of your given entity type. And these commands have shortlink wrappers. So di -r can be called with dr, and di -bkp can be called with dbkp and so on.
 
+Project website: https://diqidoq.github.io/di
+
 ### Limitations and future plans
 NOTE: At the moment the install and removal part of the script is for Drupal extensions only (no other vendor packages yet) and is targeted mainly to bash shell, but with sh* cross compatible commands. Cross compatibility to other shells and other parts of a Drupal project packages like Drupal Composer dependencies are planned. Feel free to contribute to it here on github.
 
