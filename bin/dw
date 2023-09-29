@@ -1,2 +1,2 @@
 #!/bin/sh
-di -u
+di -w

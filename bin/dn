@@ -1,2 +1,3 @@
-#!/bin/bash
-di -n
+#!/bin/sh
+# renew (update) for selected nodules | shortlink: dn | requires $@
+di -n $@

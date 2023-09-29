@@ -1,2 +1,3 @@
-#!/bin/bash
-di -r
+#!/bin/sh
+# uninstall & remove selected modules | shortlink: dr |requires $@
+di -r $@
