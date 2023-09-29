@@ -38,5 +38,7 @@ Install, checkout, update or remove multiple Drupal extensions in one simple lin
 
 to get a Drupal module or other extension via Composer, and it will do the rest for you with help of Composer, some SHELL, PHP and some checks and finally with Drush if wanted. Same commands with a leading ```-r``` flag will invert the behaviour of ```di``` and uninstall via Drush and remove multiple extensions via Composer. Or you can use the sortlink ```dr``` instead of ```di -r```. Same goes for ```di -c``` (checkout/info) using ```dc``` or ```di -s``` (show outdated) using ```ds```. And so on. @todo Tutorials and code examples will follow one day.
 
+The list of all shortlink commands regarding di can be found in [https://github.com/diqidoq/di/bin](https://github.com/diqidoq/di/bin). Some need arguments like extension1 extension2 but some are global short commands like dprm for permission repair.
+
 ## Feel free to use but consider support
 I think the best of Open Source is sharing knowlegde so please consider helping here to make it a better tool with issue reports and patches/merges when you use this tool. So we all win and you will get an improved tool on each release.
