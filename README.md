@@ -7,6 +7,8 @@ But these are splitted tasks and will be confirmed so ```di module``` can also b
 
 Project website: [https://diqidoq.github.io/di](https://diqidoq.github.io/di)
 
+**WARNING**: At the moment the script only supports Drupal project roots build like ```drupal/web/core``` with ```drupal/web/sites/default/files``` etc like provided by the Drupal Composer project-recommended repository. More variants of project trees are planned. This script has been initially developed for internal use in our offices only and we want to make it available public as a contribution to the wonderful Drupal community. So some tasks are still remaining for a full cross compatible public version yet.
+
 ### Limitations and future plans
 NOTE: At the moment the install and removal part of the script is for Drupal extensions only (no other vendor packages yet) and is targeted mainly to bash shell, but with sh* cross compatible commands and future plans. Cross compatibility to other shells and other parts of a Drupal project packages like Drupal Composer dependencies are planned. Feel free to contribute to it here on github.
 
