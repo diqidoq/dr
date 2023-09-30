@@ -147,25 +147,23 @@ di_drush_cron_run () {
 
 di_drush_pmlist () {
   
- # while getopts u:a:f: flag
+ # while getopts a:c:e: flag
  # do
   #  case "${flag}" in
-   #   c) username=${OPTARG};;
-    #  a) age=${OPTARG};;         
-     # f) fullname=${OPTARG};;
+   #   a) show=${OPTARG};; # all
+    #  c) show=${OPTARG};; # core   
+     # e) show=${OPTARG};; # contrib extensions
    # esac
  # done
 
   if [ -z "${1}" ] ; then
-  CONFIRM "List all extensions (yes = including core, no = excluding core)" 
-  if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
-    drush pml --filter="${1}"
-  else
-    drush pml --no-core --filter="${1}"
+    CONFIRM "List all extensions (yes = including core, no = excluding core)" 
+    if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
+      drush pml --filter="${1}"
+    else
+      drush pml --no-core --filter="${1}"
+    fi
   fi
-  fi
-# else 
-  #fi
 }
 
 # consumes internal argument pm-install or pm-uninstall passed via install() or remove() function
