@@ -2,9 +2,8 @@
 
 di_init () {
   # Set up color variables for command line output.
-  r='\033[0;31m';g='\033[0;32m';y='\033[0;33m';b='\033[0;34m';m='\033[0;35m';c='\033[0;36m'
-  # Clear the color by default.
-  w='\033[0m'
+  r='\033[0;31m';g='\033[0;32m';y='\033[0;33m';b='\033[0;34m';m='\033[0;35m';c='\033[0;36m';w='\033[0m'
+  
   # Some repeatable strings and interaction commands.
   YESNO () { read -p " yY(es)/nN(o): " -n 1 -r ; printf "\n" ; }
   ASK () { printf "\nDo you want to ${g}${1}${w}?" ; }
@@ -13,7 +12,7 @@ di_init () {
   SKIP () { printf "\nOk. ${g}Skipped${w} for now.\n" ; }
   ABORD () { printf "\n${g}Abord script${w} for now.\n" ; exit 1 ; }
   INPROGRESS () { printf "This feature is unsupported yet but in progress." ; ABORD ; }
-  DONE () { printf "\n${g}Done!${w}\n\n" }
+  DONE () { printf "\n${g}Done!${w}\n\n" ; }
   WRONGINPUT () { printf "Wrong input." ; ABORD ; }
   STOPERROR="${r}Error: Stopped (di) Drupal Install command!${w}"
   PRESSENTER="[Press ${g}ENTER${w} or ${g}RETURN${w} to go ahead. PRESS ${g}CTRL/C${w} to stop]"
@@ -29,8 +28,14 @@ di_check () {
     printf "\n${STOPERROR}\nComposer could not be found.\n\n" ; ABORD
   elif [[ ! -f "composer.json" ]] ; then
     printf "\n${STOPERROR}\nAre we in the proper Composer init root? A ${g}composer.json${w} file does not exist here in path.\n\n" ; ABORD
-  elif [[ ! -d "web/core" ]] ; then
-    printf "\n${STOPERROR}\nAre we in a Drupal project root? A ${g}web/core${w} directory does not exist here in path.\n\n" ; ABORD
+    # THere are hundrets of variants of a Drupal directory tree structure out there,
+    # but in 99% of the variants the core folder is on second level of project root.
+    # 
+    # So we test if we find a /core folder on second level (/*/core) 
+    # No matter what the previous folder is and no matter if it is a symlink to a global core.
+    # @todo check issue #2 for more checks required in future to 100% detect Drupal root.
+  elif [ -z "$(find . -maxdepth 2 -type d -name core -follow)" ] ; then
+    printf "\n${STOPERROR}\nAre we in a Drupal project root? A ${g}/*/core${w} directory does not exist on second level in path.\n\n" ; ABORD
   fi
 }
 
