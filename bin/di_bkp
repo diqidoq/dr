@@ -316,6 +316,7 @@ di_remove () {
   di_drush_routine pm-uninstall
   di_composer_drupal_routine remove
   di_drush_cache_clear
+  di_drush_cron_run
 }
 
 di_info () {
@@ -327,36 +328,9 @@ di_status () {
   di_drush_status
 }
 
-di_backup () {
-  di_drush_cache_clear
-  timestamp=$(date '+%y%m%d_%H%M%S')
-  bkp_path="../${PWD##*/}_bkp"
-  read -p "Type your absolute backup path including target dir (f.e. /var/www/.../mybkp) Leave empty for default: ${bkp_path} "
-  [ ! -z "${REPLY// }" ] && bkp_path="${REPLY}"
-  mkdir -p "${bkp_path}"
-  MULTICHOICE "backup all (a - default), database only (f), or files only (d)?" "(a|d|f)"
-  if [ "${REPLY}" == "f"] ; then
-    di_backup_files
-  elif [ "${REPLY}" == "d" ] ; then
-    di_backup_database
-  else
-    di_backup_files
-    di_backup_database
-  fi
-  printf "Backup finished. Backup-Folder overview:\n $(ls -lh ${bkp_path})"
-}
- 
-di_backup_files () {
-  tar cvfz ${bkp_path}/${timestamp}.tar.gz ./ >${bkp_path}/${timestamp}.log 2>&1
-}
-di_backup_database () {
-  drush sql:dump > ${bkp_path}/${timestamp}.sql
-  tar cvfz ${bkp_path}/${timestamp}_sql.tar.gz ${bkp_path}/${timestamp}.sql
-  rm ${bkp_path}/${timestamp}.sql
-}
-
 di_init
 di_check $@
 di_exec $@
 
 DONE && exit 0
+
