@@ -67,8 +67,7 @@ di_exec () {
       di_update_all
       ;;
     -b) # backup of directory  & database. | shortlink dbkp
-      DI_MODE="backup"
-      INPROGRESS
+      di_backup
       ;;
     -d)
       di_drush_updb
@@ -334,8 +333,8 @@ di_backup () {
   read -p "Type your absolute backup path including target dir (f.e. /var/www/.../mybkp) Leave empty for default: ${bkp_path} "
   [ ! -z "${REPLY// }" ] && bkp_path="${REPLY}"
   mkdir -p "${bkp_path}"
-  MULTICHOICE "backup all (a - default), database only (f), or files only (d)?" "(a|d|f)"
-  if [ "${REPLY}" == "f"] ; then
+  MULTICHOICE "backup all (a - default), database only (f), or files only (d)?" "a|d|f"
+  if [ "${REPLY}" == "f" ] ; then
     di_backup_files
   elif [ "${REPLY}" == "d" ] ; then
     di_backup_database
