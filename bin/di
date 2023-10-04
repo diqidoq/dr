@@ -21,12 +21,16 @@ di_init () {
   ITEMS="extension(s)"
 }
 
-di_check () {
+di_composer_check () {
   # Check if Composer exist and if we are in Composer/Drupal project root before continue.
   # Order is intentional. Missing arguments can be wanted to dry run command.
   if ! command -v composer &> /dev/null ; then
     printf "\n${STOPERROR}\nComposer could not be found.\n\n" ; ABORD
-  elif [[ ! -f "composer.json" ]] ; then
+  fi
+}
+
+di_drupal_root_check () {
+  if [[ ! -f "composer.json" ]] ; then
     printf "\n${STOPERROR}\nAre we in the proper Composer init root? A ${g}composer.json${w} file does not exist here in path.\n\n" ; ABORD
     # THere are hundrets of variants of a Drupal directory tree structure out there,
     # but in 99% of the variants the core folder is on second level of project root.
@@ -43,42 +47,57 @@ di_exec () {
   # Checking for leading -flag in arguments to set modus operandi.
   case "${1}" in
     -r) # uninstall & remove selected modules | shortlink: dr
+      di_drupal_root_check
       shift && di_parse $@ && di_remove
       ;;
     -c) # checkout module info for selected modules | shortlink: dc
+      di_drupal_root_check
       shift && di_parse $@ && di_info
       ;;
     -n) # renew (update) for selected nodules | shortlink: dn
+      di_drupal_root_check
       shift && di_parse $@ && di_update
       ;;
     -e) # list extensions filtered by argument or all | shortlink: de 
+      di_drupal_root_check
       shift && di_drush_pmlist $1
       ;;
     -i)
+      di_drupal_root_check
       shift && di_parse $@ && di_install
+      ;;
+    -pi)
+      di_project_install $@
       ;;
     #
     # Now flags without additional arguments, without selected extensions.
     #
     -s) # status overview | shortlink: ds
+      di_drupal_root_check
       di_status
       ;;
     -u) # update all drupal/* -W | shortlink: dupd (for historical reasons)
+      di_drupal_root_check
       di_update_all
       ;;
     -b) # backup of directory  & database. | shortlink dbkp
+      di_drupal_root_check
       di_backup
       ;;
     -d)
+      di_drupal_root_check
       di_drush_updb
       ;;
-    -p) # repair all file permissions in project dir. shortlink dprm
+    -prm) # repair all file permissions in project dir. shortlink dprm
+      di_drupal_root_check
       di_permission_repair      
       ;;
     -w)
+      di_drupal_root_check
       di_drush_warn
       ;;
     -f)
+      di_drupal_root_check
       di_drush_err
       ;;
     -*)
@@ -88,6 +107,7 @@ di_exec () {
     # finally the install mode again as default wich actually needs no flag and has no other shortlink than di itself.
     #
     *) # install and enable
+      di_drupal_root_check
       di_parse $@ && di_install
       ;;
   esac
@@ -354,8 +374,17 @@ di_backup_database () {
   rm ${bkp_path}/${timestamp}.sql
 }
 
+di_project_install () {
+  timestamp=$(date '+%y%m%d_%H%M%S')
+  [ -z "${1}" ] && drupal_version="" || drupal_verion=":${1}"
+  [ -z "${2}" ] && drupal_install_dir="drupal_${timestamp}" || drupal_install_dir="${2}"
+  composer create-project drupal/recommended-project${drupal_version} ${drupal_install_dir}
+  cd ${drupal_install_dir}
+  composer require drush/drush && drush site:install
+}
+
 di_init
-di_check $@
+di_composer_check
 di_exec $@
 
 DONE && exit 0
