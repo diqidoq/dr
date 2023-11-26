@@ -6,8 +6,11 @@ di_init () {
   
   # Some repeatable strings and interaction commands.
   YESNO () { read -p " yY(es)/nN(o): " -n 1 -r ; printf "\n" ; }
+  GO () { if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then ${1} ; else SKIP ; fi }
+  YESNOGO () { read -p " yY(es)/nN(o): " -n 1 -r ; printf "\n" ; GO ${1} ; }
   ASK () { printf "\nDo you want to ${g}${1}${w}?" ; }
   CONFIRM () { ASK "${1}" ; YESNO ; }
+  CONFIRMGO () { ASK "${1}" ; YESNOGO ${2} ; }
   MULTICHOICE () { ASK "${1}" ; read -p " (${2}): " -n 1 -r ; printf "\n" ; }
   SKIP () { printf "\nOk. ${g}Skipped${w} for now.\n" ; }
   ABORD () { printf "\n${g}Abord script${w} for now.\n" ; exit 1 ; }
@@ -297,7 +300,7 @@ ${w}
 }
 
 di_install () {
-  di_composer_info_routine info
+  # di_composer_info_routine info
   di_composer_drupal_routine require
   di_drush_routine pm-install
   di_drush_cache_clear
@@ -359,6 +362,7 @@ di_backup () {
   elif [ "${REPLY}" == "d" ] ; then
     di_backup_database
   else
+    CONFIRMGO "Flush all image styles" 'drush image-flush --all'
     di_backup_files
     di_backup_database
   fi
