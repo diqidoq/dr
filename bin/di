@@ -7,7 +7,7 @@ di_init () {
   # Some repeatable strings and interaction commands.
   YESNO () { read -p " yY(es)/nN(o): " -n 1 -r ; printf "\n" ; }
   GO () { if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then ${1} ; else SKIP ; fi }
-  YESNOGO () { read -p " yY(es)/nN(o): " -n 1 -r ; printf "\n" ; GO ${1} ; }
+  YESNOGO () { read -p " yY(es)/nN(o): " -n 1 -r ; printf "\n" ; GO "${1}" ; }
   ASK () { printf "\nDo you want to ${g}${1}${w}?" ; }
   CONFIRM () { ASK "${1}" ; YESNO ; }
   CONFIRMGO () { ASK "${1}" ; YESNOGO ${2} ; }
@@ -149,6 +149,7 @@ di_parse () {
 
 di_drush_cache_clear () { CONFIRM "clear Drupal caches" ; [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cr || SKIP ; }
 di_drush_cron_run () { CONFIRM "run Drupal cron" ; [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cron || SKIP ; }
+di_drush_flush_image_styles () { drush image-flush --all ; }
 
 di_drush_pmlist () {
   
@@ -362,7 +363,7 @@ di_backup () {
   elif [ "${REPLY}" == "d" ] ; then
     di_backup_database
   else
-    CONFIRMGO "Flush all image styles" 'drush image-flush --all'
+    CONFIRMGO "Flush all image styles" di_drush_flush_image_styles
     di_backup_files
     di_backup_database
   fi
