@@ -16,10 +16,77 @@ di_init () {
   ABORD () { printf "\n${g}Abord script${w} for now.\n" ; exit 1 ; }
   INPROGRESS () { printf "This feature is unsupported yet but in progress." ; ABORD ; }
   DONE () { printf "\n${g}Done!${w}\n\n" ; }
-  WRONGINPUT () { printf "Wrong input." ; ABORD ; }
+  WRONGINPUT () { printf "Wrong input." ; HELP ; ABORD ; }
   STOPERROR="${r}Error: Stopped (di) Drupal Install command!${w}"
   PRESSENTER="[Press ${g}ENTER${w} or ${g}RETURN${w} to go ahead. PRESS ${g}CTRL/C${w} to stop]"
   
+  HELP () {
+  cat << 'EOF'
+
+  HELP
+  ----
+
+    -r) # uninstall & remove selected modules | shortlink: dr
+      di_drupal_root_check
+      shift && di_parse $@ && di_remove
+      ;;
+    -c) # checkout module info for selected modules | shortlink: dc
+      di_drupal_root_check
+      shift && di_parse $@ && di_info
+      ;;
+    -n) # renew (update) for selected nodules | shortlink: dn
+      di_drupal_root_check
+      shift && di_parse $@ && di_update
+      ;;
+    -e) # list extensions filtered by argument or all | shortlink: de 
+      di_drupal_root_check
+      shift && di_drush_pmlist $1
+      ;;
+    -i) # Drupal install for selected modules | shortlink di
+      di_drupal_root_check
+      shift && di_parse $@ && di_install
+      ;;
+    -bi) # MySQL DB install | shortlink dbi
+      di_mysql_db_install
+      ;;
+    -pi) # Drupal project-recommended install arg: version directory | shortlink dpi
+      di_project_install $@
+      ;;
+    #
+    # Now flags without additional arguments, without selected extensions.
+    #
+    -s) # status overview | shortlink: ds
+      di_drupal_root_check
+      di_status
+      ;;
+    -u) # update all drupal/* -W | shortlink: dupd (for historical reasons)
+      di_drupal_root_check
+      di_update_all
+      ;;
+    -b) # backup of directory  & database. | shortlink dbkp
+      di_drupal_root_check
+      di_backup
+      ;;
+    -d) # Drupal database update | shortlink dd
+      di_drupal_root_check
+      di_drush_updb
+      ;;
+    -prm) # repair all file permissions in project dir. shortlink dprm
+      di_drupal_root_check
+      di_permission_repair      
+      ;;
+    -w)
+      di_drupal_root_check
+      di_drush_warn
+      ;;
+    -f)
+      di_drupal_root_check
+      di_drush_err
+
+EOF
+
+}
+
   # @todo Which we can change programmatically on respective different tasks later.
   ITEMS="extension(s)"
 }
@@ -65,11 +132,14 @@ di_exec () {
       di_drupal_root_check
       shift && di_drush_pmlist $1
       ;;
-    -i)
+    -i) # Drupal install for selected modules | shortlink di
       di_drupal_root_check
       shift && di_parse $@ && di_install
       ;;
-    -pi)
+    -bi) # MySQL DB install | shortlink dbi
+      di_mysql_db_install
+      ;;
+    -pi) # Drupal project-recommended install arg: version directory | shortlink dpi
       di_project_install $@
       ;;
     #
@@ -87,7 +157,7 @@ di_exec () {
       di_drupal_root_check
       di_backup
       ;;
-    -d)
+    -d) # Drupal database update | shortlink dd
       di_drupal_root_check
       di_drush_updb
       ;;
@@ -149,7 +219,7 @@ di_parse () {
 
 di_drush_cache_clear () { CONFIRM "clear Drupal caches" ; [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cr || SKIP ; }
 di_drush_cron_run () { CONFIRM "run Drupal cron" ; [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] && drush cron || SKIP ; }
-di_drush_flush_image_styles () { drush image-flush --all ; }
+di_drush_flush_image_styles () { drush image:flush --all ; }
 
 di_drush_pmlist () {
   
@@ -379,13 +449,29 @@ di_backup_database () {
   rm ${bkp_path}/${timestamp}.sql
 }
 
+di_mysql_db_install () {
+ read -p "dbadmin:" dbadmin;
+ read -p "dbadminpw:" dbadminpw;
+ read -p "db:" db;
+ read -p "dbuser:" dbuser;
+ printf "Generate a list of passwords with pwgen (if not installed: apt-get install pwgen) and copy one for next step.\n\n"
+ pwgen 23
+ read -p "dbuserpw:" dbuserpw;
+ mysql -u ${dbadmin} -p${dbadminpw} -e "CREATE database ${db}; CREATE USER '${dbuser}'@'localhost' IDENTIFIED BY '${dbuserpw}'; GRANT ALL PRIVILEGES ON ${db}.* TO '${dbuser}'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES;"
+}
+
 di_project_install () {
   timestamp=$(date '+%y%m%d_%H%M%S')
   [ -z "${1}" ] && drupal_version="" || drupal_verion=":${1}"
   [ -z "${2}" ] && drupal_install_dir="drupal_${timestamp}" || drupal_install_dir="${2}"
   composer create-project drupal/recommended-project${drupal_version} ${drupal_install_dir}
   cd ${drupal_install_dir}
-  composer require drush/drush && drush site:install
+  ls -ahL
+  composer require drush/drush
+  mkdir web/sites/default/files
+  # cp web/sites/default/default.settings.php web/sites/default/settings.php
+  di_mysql_db_install
+  drush si
 }
 
 di_init
