@@ -2,7 +2,7 @@
 
 di_init () {
   # Set up color variables for command line output.
-  r='\033[0;31m';g='\033[0;32m';y='\033[0;33m';b='\033[0;34m';m='\033[0;35m';c='\033[0;36m';w='\033[0m'
+  r='\033[0;31m'; g='\033[0;32m'; y='\033[0;33m'; b='\033[0;34m'; m='\033[0;35m'; c='\033[0;36m'; w='\033[0m'
   
   # Some repeatable strings and interaction commands.
   YESNO () { read -p " yY(es)/nN(o): " -n 1 -r ; printf "\n" ; }
@@ -12,13 +12,13 @@ di_init () {
   CONFIRM () { ASK "${1}" ; YESNO ; }
   CONFIRMGO () { ASK "${1}" ; YESNOGO ${2} ; }
   MULTICHOICE () { ASK "${1}" ; read -p " (${2}): " -n 1 -r ; printf "\n" ; }
-  SKIP () { printf "\nOk. ${g}Skipped${w} for now.\n" ; }
-  ABORD () { printf "\n${g}Abord script${w} for now.\n" ; exit 1 ; }
+  SKIP () { printf "\nOk. ${y}Skipped${w} for now.\n" ; }
+  ABORD () { printf "\n${y}Abord script${w} for now.\n" ; exit 1 ; }
   INPROGRESS () { printf "This feature is unsupported yet but in progress." ; ABORD ; }
-  DONE () { printf "\n${g}Done!${w}\n\n" ; }
+  COMPLETED () { printf "\n${g}Done!${w}\n\n" ; }
   WRONGINPUT () { printf "Wrong input." ; HELP ; ABORD ; }
-  STOPERROR="${r}Error: Stopped (di) Drupal Install command!${w}"
-  PRESSENTER="[Press ${g}ENTER${w} or ${g}RETURN${w} to go ahead. PRESS ${g}CTRL/C${w} to stop]"
+  STOPERROR="${r}Error: Stopped install command!${w}"
+  PRESSENTER="[Press ${g}ENTER${w} or ${g}RETURN${w} to go ahead. ${c}PRESS ${b}CTRL/C${w} to stop]"
   
   HELP () {
   cat << 'EOF'
@@ -26,52 +26,52 @@ di_init () {
   HELP
   ----
 
-    -r) # uninstall & remove selected modules | shortlink: dr
+    -r) # uninstall & remove selected modules | short link: dr
       di_drupal_root_check
       shift && di_parse $@ && di_remove
       ;;
-    -c) # checkout module info for selected modules | shortlink: dc
+    -c) # checkout module info for selected modules | short link: dc
       di_drupal_root_check
       shift && di_parse $@ && di_info
       ;;
-    -n) # renew (update) for selected nodules | shortlink: dn
+    -n) # renew (update) for selected nodules | short link: dn
       di_drupal_root_check
       shift && di_parse $@ && di_update
       ;;
-    -e) # list extensions filtered by argument or all | shortlink: de 
+    -e) # list extensions filtered by argument or all | short link: de
       di_drupal_root_check
       shift && di_drush_pmlist $1
       ;;
-    -i) # Drupal install for selected modules | shortlink di
+    -i) # Drupal install for selected modules | short link di
       di_drupal_root_check
       shift && di_parse $@ && di_install
       ;;
-    -bi) # MySQL DB install | shortlink dbi
+    -bi) # MySQL DB install | short link dbi
       di_mysql_db_install
       ;;
-    -pi) # Drupal project-recommended install arg: version directory | shortlink dpi
+    -pi) # Drupal project-recommended install arg: version directory | short link dpi
       di_project_install $@
       ;;
     #
     # Now flags without additional arguments, without selected extensions.
     #
-    -s) # status overview | shortlink: ds
+    -s) # status overview | short link: ds
       di_drupal_root_check
       di_status
       ;;
-    -u) # update all drupal/* -W | shortlink: dupd (for historical reasons)
+    -u) # update all drupal/* -W | short link: dupd (for historical reasons)
       di_drupal_root_check
       di_update_all
       ;;
-    -b) # backup of directory  & database. | shortlink dbkp
+    -b) # backup of directory  & database. | short link dbkp
       di_drupal_root_check
       di_backup
       ;;
-    -d) # Drupal database update | shortlink dd
+    -d) # Drupal database update | short link dd
       di_drupal_root_check
       di_drush_updb
       ;;
-    -prm) # repair all file permissions in project dir. shortlink dprm
+    -prm) # repair all file permissions in project dir. short link dprm
       di_drupal_root_check
       di_permission_repair      
       ;;
@@ -102,7 +102,7 @@ di_composer_check () {
 di_drupal_root_check () {
   if [[ ! -f "composer.json" ]] ; then
     printf "\n${STOPERROR}\nAre we in the proper Composer init root? A ${g}composer.json${w} file does not exist here in path.\n\n" ; ABORD
-    # THere are hundrets of variants of a Drupal directory tree structure out there,
+    # THere are hundreds of variants of a Drupal directory tree structure out there,
     # but in 99% of the variants the core folder is on second level of project root.
     # 
     # So we test if we find a /core folder on second level (/*/core) 
@@ -114,54 +114,54 @@ di_drupal_root_check () {
 }
 
 di_exec () {
-  # Checking for leading -flag in arguments to set modus operandi.
+  # Checking for leading -flag in arguments to set modus-operandi.
   case "${1}" in
-    -r) # uninstall & remove selected modules | shortlink: dr
+    -r) # uninstall & remove selected modules | short link: dr.
       di_drupal_root_check
-      shift && di_parse $@ && di_remove
+      shift && di_parse "$@" && di_remove
       ;;
-    -c) # checkout module info for selected modules | shortlink: dc
+    -c) # checkout module info for selected modules | short link: dc.
       di_drupal_root_check
-      shift && di_parse $@ && di_info
+      shift && di_parse "$@" && di_info
       ;;
-    -n) # renew (update) for selected nodules | shortlink: dn
+    -n) # renew (update) for selected nodules | short link: dn.
       di_drupal_root_check
-      shift && di_parse $@ && di_update
+      shift && di_parse "$@" && di_update
       ;;
-    -e) # list extensions filtered by argument or all | shortlink: de 
+    -e) # list extensions filtered by argument or all | short link: de.
       di_drupal_root_check
       shift && di_drush_pmlist $1
       ;;
-    -i) # Drupal install for selected modules | shortlink di
+    -i) # Drupal install for selected modules | short link di.
       di_drupal_root_check
-      shift && di_parse $@ && di_install
+      shift && di_parse "$@" && di_install
       ;;
-    -bi) # MySQL DB install | shortlink dbi
+    -bi) # MySQL DB install | short link dbi.
       di_mysql_db_install
       ;;
-    -pi) # Drupal project-recommended install arg: version directory | shortlink dpi
-      di_project_install $@
+    -pi) # Drupal project-recommended install arg: version directory | short link dpi.
+      di_project_install "$@"
       ;;
     #
     # Now flags without additional arguments, without selected extensions.
     #
-    -s) # status overview | shortlink: ds
+    -s) # status overview | short link: ds.
       di_drupal_root_check
       di_status
       ;;
-    -u) # update all drupal/* -W | shortlink: dupd (for historical reasons)
+    -u) # update all drupal/* -W | short link: dupd (for historical reasons).
       di_drupal_root_check
       di_update_all
       ;;
-    -b) # backup of directory  & database. | shortlink dbkp
+    -b) # backup of directory  & database. | short link dbkp.
       di_drupal_root_check
       di_backup
       ;;
-    -d) # Drupal database update | shortlink dd
+    -d) # Drupal database update | short link dd.
       di_drupal_root_check
       di_drush_updb
       ;;
-    -prm) # repair all file permissions in project dir. shortlink dprm
+    -prm) # repair all file permissions in project dir. short link dprm.
       di_drupal_root_check
       di_permission_repair      
       ;;
@@ -177,11 +177,11 @@ di_exec () {
       WRONGINPUT
       ;;
     #
-    # finally the install mode again as default wich actually needs no flag and has no other shortlink than di itself.
+    # finally the installation mode again as default which actually needs no flag and has no other short link than di itself.
     #
-    *) # install and enable
+     *) # install and enable
       di_drupal_root_check
-      di_parse $@ && di_install
+      shift && di_parse "$@" && di_install
       ;;
   esac
 }
@@ -476,6 +476,6 @@ di_project_install () {
 
 di_init
 di_composer_check
-di_exec $@
+di_exec "$@"
 
-DONE && exit 0
+COMPLETED && exit 0
