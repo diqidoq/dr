@@ -1,3 +1,0 @@
-#!/bin/sh
-# list extensions filtered by argument or all | shortlink: de | requires $@ if one to filer
-di -e $@

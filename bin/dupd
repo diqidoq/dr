@@ -1,3 +1,0 @@
-#!/bin/sh
-# # update all drupal/* -W | shortlink: dupd (for historical reasons and du command exist)
-di -u

@@ -1,3 +1,0 @@
-#!/bin/sh
-# checks out module info for selected modules | shortlink: dc | requires $@
-di -c $@

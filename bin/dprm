@@ -1,3 +1,0 @@
-#!/bin/sh
-# repair all file permissions in project dir. | shortlink dprm (for historical reasons) or dp
-di -prm
