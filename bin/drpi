@@ -1,2 +1,2 @@
 #!/bin/sh
-dr -pi
+dr -pi "$@"

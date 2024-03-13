@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-#########################################################
+#####################################################################
 # @author: dqd (formerly diqidoq)
 # @license: GPLv3
 # @see [dr on Github](https://github.com/diqidoq/dr).
-#########################################################
+#####################################################################
 
 # @function dr_init
 # @description initializes <dr> with primary settings and command line dialog strings.
@@ -44,7 +44,23 @@ dr_init () {
         printf \\033\[%sm "$code"
     done
 )
-  
+
+  # Check type of shell variable. Good for debugging or required conditions
+  type_of_var () {
+    declare -l type_signature
+    type_signature=$(declare -p "$1" 2>/dev/null)
+
+    if [[ "$type_signature" =~ "declare --" ]]; then
+        printf "string"
+    elif [[ "$type_signature" =~ "declare -a" ]]; then
+        printf "array"
+    elif [[ "$type_signature" =~ "declare -A" ]]; then
+        printf "map"
+    else
+        printf "none"
+    fi
+}
+
   # Some repeatable strings and interaction commands.
   # NOTE: IDE warnings regarding wrong use of variable in format string in here
   # can be ignored since your IDE check does not understand that these vars hold format.
@@ -64,10 +80,10 @@ dr_init () {
   PRESS_ENTER () { printf "[Press %sENTER%s or %sRETURN%s to go ahead. %sPRESS %sCTRL/C%s to stop]"\
                   "$(s green)" "$(s off)" "$(s green)" "$(s off)" "$(s cyan)" "$(s bold underline)" "$(s off)"; }
   COMMAND_NOT_FOUND () { printf "\n %s%s%s \n %s could not be found. Is it installed?\n\n" "$(s yellow)" "${STOP_ERROR}" "$(s off)" "${1}" ; }
-  ARGUMENTS_INPUT () {
+  ARGUMENTS_INPUT_NOTE () {
     printf "You provided %s%s%s via%s input arguments%s (not via a file). - " "$(s green)" "${ITEMS_TYPE}" "$(s off)" "$(s green)" "$(s off)";
     printf "Start parsing..." ; }
-  ARGUMENTS_SEPARATED () {
+  ARGUMENTS_INPUT_SEPARATED_WARNING () {
     printf "\n%sAttention:%s Seems that you used%s comma separated multiple arguments.%s\n" "$(s yellow)" "$(s off)" "$(s yellow)" "$(s off)"
     printf "Some users use comma and/or space, some not. "
     printf "We will check and repair this."
@@ -88,20 +104,20 @@ https://raw.githubusercontent.com/tvlooy/drush-launcher/master/drush %s\n" "$(s 
    ...to have drush command without vendor path available.\n" "$(s yellow)" "$(s green)" "$(s off)" ;
   }
   COMPOSER_JSON_NOT_FOUND () {
-    printf "\nAre we in the %sproper Composer init root%s?\n" "$(s yellow)" "$(s off)"
+    printf "\nAre we in the%s proper Composer init root%s?\n" "$(s yellow)" "$(s off)"
     printf "A%s composer.json%s file does not exist here in path.\n\n%s"  "$(s green)" "$(s off)" "${STOP_ERROR}";
   }
   DRUPAL_ROOT_NOT_FOUND () {
-    printf "\n%s\nAre we in a Drupal project root? A %s/*/core%s directory %sdoes not exist%s on \
+    printf "\n%s\nAre we in a Drupal project root? A %s/*/core%s directory%s does not exist%s on \
 second level in path.\n\n" "${STOP_ERROR}" "$(s green)" "$(s off)" "$(s red)" "$(s off)" ;
   }
   PERMISSION_REPAIR_INFO () {
-    printf "\nBased on the %sfollowing links%s:\n" "$(s green)" "$(s off)"
+    printf "\nBased on the%s following links%s:\n" "$(s green)" "$(s off)"
     printf "https://www.drupal.org/node/244924\n"
     printf "https://bit.ly/3IZL6n1\n"
     printf "https://bit.ly/3K1WBeL\n"
     printf "https://bit.ly/3Dwimkx\n"
-    printf "...I repair %sDrupal directories%s and%s file permissions%s now recursively.\n\n" "$(s green)" "$(s off)" "$(s green)" "$(s off)"
+    printf "...I repair%s Drupal directories%s and%s file permissions%s now recursively.\n\n" "$(s green)" "$(s off)" "$(s green)" "$(s off)"
   }
 
   # @todo Which we can change programmatically on respective different tasks later.
@@ -141,7 +157,7 @@ dr_drush_check () {
 dr_drupal_root_check () {
   if [[ ! -f "composer.json" ]] ; then
     COMPOSER_JSON_NOT_FOUND ; ABORT
-    # THere are hundreds of variants of a Drupal directory tree structure out there,
+    # There are hundreds of variants of a Drupal directory tree structure out there,
     # but in 99% of the variants the core folder is on second level of project root.
     # 
     # So we test if we find a /core folder on second level (/*/core) 
@@ -155,48 +171,70 @@ dr_drupal_root_check () {
 dr_exec () {
   # Checking for leading -flag in arguments to set modus-operandi.
   case "${1}" in
-    -r) # uninstall & remove selected modules | short link: drr.
+  # manage extensions case group
+  ##############################
+    -i)
+      # Install for selected Drupal modules | short link dri.
+      # takes @arguments after case -switch identifier and needs @shift
       dr_drupal_root_check
       dr_composer_check
       dr_drush_check
-      shift && dr_parse "$@" && dr_remove
+      shift
+      dr_manage_extensions drupal module install "$@"
       ;;
-    -c) # checkout module info for selected modules | short link: drc.
+    -r)
+      # Uninstall & remove selected Drupal modules | short link: drr.
+      # takes @arguments after case -switch identifier and needs @shift
       dr_drupal_root_check
-      shift && dr_parse "$@" && dr_info
+      dr_composer_check
+      dr_drush_check
+      shift
+      dr_manage_extensions drupal module uninstall "$@"
       ;;
-    -n) # renew (update) for selected nodules | short link: drn.
+    -c)
+      # Checkout info for selected modules | short link: drc.
+      # takes @arguments after case -switch identifier and needs @shift
       dr_drupal_root_check
-      shift && dr_parse "$@" && dr_update
+      shift
+      dr_info
       ;;
-    -l) # list extensions filtered by argument or all | short link: drl.
+    -u)
+      # Update selected modules | short link: dru.
+      # takes @arguments after case -switch identifier and needs @shift
+      dr_drupal_root_check
+      shift
+      dr_parse_input_extension_list "$@"
+      dr_manage_extensions_update
+      ;;
+    -l)
+      # list extensions filtered by argument or all | short link: drl.
+      # takes @arguments after case -switch identifier and needs @shift
       dr_drupal_root_check
       dr_drush_check
       shift && dr_drush_pmlist $1
       ;;
-    -i) # Drupal install for selected modules | short link dri.
-      dr_drupal_root_check
-      dr_drush_check
-      shift && dr_parse "$@" && dr_install
-      ;;
-    -dbi) # MySQL DB install | short link drdbi.
+  # project install case group
+  ############################
+    -dbi)
+      # MySQL DB install | short link drdbi.
       dr_mysql_db_install
       ;;
-    -pi) # Drupal project-recommended install arg: version directory | short link drpi.
+    -pi)
+      # Drupal project-recommended install arg: version directory | short link drpi.
+      # takes @arguments after case -switch identifier and needs @shift
       dr_composer_check
       dr_drush_check
-      dr_project_install "$@"
+      shift && dr_project_install "$@"
       ;;
-    #
-    # Now flags without additional arguments, without selected extensions.
-    #
+  # project management case group
+  ###############################
     -s) # status overview | short link: drs.
       dr_drupal_root_check
       dr_composer_check
       dr_drush_check
       dr_status
       ;;
-    -u | -up) # update all drupal/* -W | short link: drupd (for historical reasons).
+    -ua | -upa) # update all drupal/* -W | short link: drupa
       dr_drupal_root_check
       dr_composer_check
       dr_update_all
@@ -215,6 +253,14 @@ dr_exec () {
       dr_drupal_root_check
       dr_permission_repair      
       ;;
+    -fis) # flush images styles
+      dr_drush_flush_image_styles
+      dr_drush_cache_clear
+      ;;
+    -ebi) # entity bundle info
+      dr_drush_cache_clear
+      dr_manage_project_get_entity_type_bundle_list $1
+      ;;
     -w | -warn) # print all Drupal warning messages in project | short link drw, drwarn.
       dr_drush_check
       dr_drush_warn
@@ -229,60 +275,22 @@ dr_exec () {
   esac
 }
 
-dr_parse () {
-  if [ "$#" -eq 0 ] ; then
-    ARGUMENTS_NOT_FOUND ; ABORT
-  else
-    if [[ "${1}" == +(*.log|*.txt|*.csv) ]] ; then
-      local line
-      while read -r line ; do
-        echo "${line}"
-      done < "${1}"
-      exit 1
-    else
-      ARGUMENTS_INPUT
-      local Arguments=$*
-      # To collect and fix multiple arguments input like 1, 2,3 4 5
-      # so that it will be interpreted like 1 2 3 4 5 (as 5 arguments)
-      # we do some string split replace and prepare an arguments array.
-      if [[ $Arguments == *","* ]] ; then
-        # Let's confirm arguments repair and split on separator by the user - just in case.
-        ARGUMENTS_SEPARATED
-        repair_separator () {
-          Arguments=$(sed 's/,/, /g' <<< "$Arguments")
-          Arguments=$(sed 's/,//g' <<< "$Arguments")
-        }
-        CONFIRM_GO "go ahead" repair_separator
-      fi
-      # Final whitespace cleanup and conversion into Array.
-      Arguments=$(sed 's/  / /g' <<< "$Arguments")
-    fi
-    # @todo ? Let me know, does it work in your shell? Not sure about <<< in all *sh.
-    IFS=' '
-    read -ra Arguments_Array <<< "$Arguments"
-  fi
-}
-
 dr_drush_cache_clear () {
-  CONFIRM "clear Drupal caches"
-  if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
-    drush cr
-  else
-    SKIP
-  fi
+  run_cache_clear () { drush cr ; }
+  CONFIRM_GO "clear Drupal caches" run_cache_clear
 }
 
 dr_drush_cron_run () {
-  CONFIRM "run Drupal cron"
-  if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
-    drush cron
-  else
-    SKIP
-  fi
+  run_cron () { drush cron ; }
+  CONFIRM_GO "run Drupal cron" run_cron
 }
 
-dr_drush_flush_image_styles () { drush image:flush --all ; }
+dr_drush_flush_image_styles () {
+  run_flush_images () { drush image:flush --all ; }
+  CONFIRM_GO "run Drupal cron" run_flush_images
+}
 
+# @TODO needs refactoring to new function structure of <dr>
 dr_drush_pmlist () {
   if [ -z "${1}" ] ; then
     CONFIRM "List all ${ITEMS_TYPE} (yes = including core, no = excluding core)" 
@@ -294,32 +302,197 @@ dr_drush_pmlist () {
   fi
 }
 
+# consumes user input
+# prints validates input
+dr_validate_input_extension_list () {
+  declare -l modifier
+  declare -l input
+  declare -l count_of_arg
+
+  modifier="$1"
+  shift
+  count_of_arg="$#"
+
+  if [ "$count_of_arg" -eq 0 ] ; then
+    # in case of missing arguments
+    printf "List the machine names of the extensions you want to %s separated by a space " "$modifier"
+    printf "or provide a *.log|*.txt|*.csv file with them listed"
+    read -p ": " input
+
+    if [ -z "$input" ] ; then
+      # in case of still no arguments
+      ARGUMENTS_NOT_FOUND ; ABORT
+    else
+      echo "$input"
+    fi
+
+  else
+    # in case of arguments already given
+    echo "$*"
+  fi
+}
+
+# @use dr_validate_input_extension_list
+# to get validated user input
+# prints to $input_arguments_array
+dr_parse_input_extension_list () {
+  declare -l input_arguments
+  declare -ga input_arguments_array
+  # type_of_var input_arguments_array
+
+  input_arguments=$(dr_validate_input_extension_list "$@") > /dev/null &
+
+  if [[ "${input_arguments}" == +(*.log|*.txt|*.csv) ]] ; then
+    # read from file with extensions
+    decalre -l line
+    while read -r line ; do
+      echo "${line}"
+    done < "${input_arguments}"
+  else
+    # read from command line input argument list of extensions
+    ARGUMENTS_INPUT_NOTE
+    # To collect and fix multiple arguments input like 1, 2,3 4 5
+    # so that it will be interpreted like 1 2 3 4 5 (as 5 arguments)
+    # we do some string split replace and prepare an arguments array.
+    if [[ $input_arguments == *","* ]] ; then
+      # Let's confirm arguments repair and split on separator by the user - just in case.
+      ARGUMENTS_INPUT_SEPARATED_WARNING
+      repair_separator () {
+        input_arguments=$(sed 's/,/, /g' <<< "$input_arguments")
+        input_arguments=$(sed 's/,//g' <<< "$input_arguments")
+      }
+      CONFIRM_GO "go ahead" repair_separator
+    fi
+    # Final whitespace cleanup and conversion into Array.
+    input_arguments=$(sed 's/  / /g' <<< "$input_arguments")
+  fi
+  # Final array parsing into whitespace separated string
+  IFS=' '
+  read -ra input_arguments_array <<< "$input_arguments"
+  type_of_var input_arguments_array
+}
+
+# alters user input to add prefixes or suffixes
+# based on scope like drupal/* vendor/*.
+# prints $altered_array
+dr_alter_input_extension_list () {
+  declare -l altered_array
+  declare -l count=0
+  declare -l prefix
+  declare -l suffix
+
+  case "${1}" in
+    -prepend | -p)
+      shift
+      prefix="${1}"
+      for i in "${input_arguments_array[@]}" ; do
+        altered_array[$count]="$prefix$i"
+        count=$((count + 1))
+      done
+      ;;
+    -append | -a | -s)
+      shift
+      suffix="${1}"
+      for i in "${input_arguments_array[@]}" ; do
+        altered_array[$count]="$i$suffix"
+        count=$((count + 1))
+      done
+      ;;
+  esac
+
+echo "${altered_array[@]}"
+}
+
+dr_manage_extensions () {
+  declare -l scope # drupal/vendor
+  declare -l type  # theme/module
+  declare -l action # install/uninstall/get-info
+  scope="$1" && shift
+  type="$1" && shift
+  action="$1" && shift
+
+  declare -lA composer_actions
+  declare -lA drush_actions
+  composer_actions["-i"]="require"
+  composer_actions["-c"]="info"
+  composer_actions["-u"]="update"
+  composer_actions["-r"]="remove"
+  drush_actions["-i"]="pm-install"
+  drush_actions["-c"]="pm:list | grep"
+  drush_actions["-r"]="pm-uninstall"
+
+  dr_parse_input_extension_list "$@"
+  set -e
+  dr_manage_extensions_composer_routine ${composer_actions[$action]}
+  dr_manage_extensions_drush_routine ${drush_actions[$action]}
+  dr_drush_cache_clear
+  set +e
+}
+
+dr_manage_extensions_remove () {
+  set -e
+  dr_manage_extensions_drush_routine pm-uninstall
+  dr_manage_extensions_composer_routine remove
+  dr_drush_cache_clear
+  set +e
+}
+
+dr_manage_extensions_update () {
+  dr_drush_cron_run
+  dr_manage_extensions_composer_info_routine info
+  dr_manage_extensions_composer_routine update -W
+  dr_drush_updb
+  dr_drush_cache_clear
+}
+
+dr_update_all () {
+  MULTI_CHOICE "update [a]ll, [d]rupal only, [i]nteractive" "a/d/i"
+  case "${REPLY}" in
+    a)
+      composer update -W
+      ;;
+    d)
+      composer update drupal/* -W
+      ;;
+    i)
+      composer update --interactive
+      ;;
+    *)
+      WRONG_INPUT
+      ;;
+  esac
+  dr_drush_updb
+  dr_drush_cache_clear
+}
+
 # consumes internal argument pm-install or pm-uninstall passed via install() or remove() function
-dr_drush_routine () {
+dr_manage_extensions_drush_routine () {
   declare -l items
   declare -l drush_command
   drush_command="$1"
-  items=$(for i in "${Arguments_Array[@]}"; do printf " %s" "$i" ; done ;)
+
+  items=$(for i in "${input_arguments_array[@]}"; do printf " %s" "$i" ; done ;)
   drush_run () { drush $drush_command $items -y ; }
     CONFIRM_GO "$drush_command $items via Drush" drush_run
 }
 
 # Drupal specific Composer routine consuming internal argument require or remove.
-dr_composer_routine () {
+dr_manage_extensions_composer_routine () {
   declare -l items
-  declare -l composer_command
-  composer_command="$1"
-  items=$(for i in "${Arguments_Array[@]}" ; do printf " drupal/%s" "${i}" ; done)
-  composer_run () { composer $composer_command $items $2 ; }
-  CONFIRM_GO "$composer_command $items via Composer" composer_run
+  declare -l action
+  action="$1"
+  items=$(dr_alter_input_extension_list -p "drupal/")
+  # items=$(for i in "${input_arguments_array[@]}" ; do printf "drupal/%s " "${i}" ; done)
+  composer_run () { composer $action $items $2 ; }
+  CONFIRM_GO "$action $items via Composer" composer_run
 }
 
-dr_composer_extension_info_routine () {
+dr_manage_extensions_composer_info_routine () {
   declare -l composer_command
   composer_command="$1"
   composer_info_run () {
     # @todo for not *sh compatible change it to i=0 while []; do
-    for i in "${Arguments_Array[@]}"; do
+    for i in "${input_arguments_array[@]}"; do
       composer $composer_command -a drupal/"${i}" | grep -e descrip -e versions --color=auto
       printf "\n-----------------------------------\n\n"
     done
@@ -335,14 +508,14 @@ dr_drush_err () {
   drush core:requirements --severity=2
 }
 
-dr_composer_status () {
+dr_manage_extensions_composer_update_status () {
   composer clear-cache
   composer outdated
   composer update --dry-run
   composer status
 }
 
-dr_drush_status () {
+dr_manage_project_drush_status () {
   dr_drush_cache_clear
   dr_drush_cron_run
   drush pm:security
@@ -351,17 +524,13 @@ dr_drush_status () {
   dr_drush_err
 }
 
-dr_drush_eval_get_bundle_info () {
+dr_manage_project_get_entity_type_bundle_list () {
   drush php-eval "print_r(array_keys(\Drupal::service('entity_type.bundle.info')->getBundleInfo('$1')));"
 }
 
 dr_drush_updb () {
-  CONFIRM "update Drupal database"
-  if [[ "$REPLY" =~ ^([yY][eE][sS]|[yY])$ ]] ; then
-    drush updb
-  else
-    SKIP
-  fi
+  exec_drush_updb () { drush updb ; }
+  CONFIRM_GO "update Drupal database" exec_drush_updb
 }
 
 dr_permission_repair() {
@@ -377,7 +546,7 @@ dr_permission_repair() {
   LOG_DIR=permission_repair_logs
   mkdir -p ${LOG_DIR}
   declare -l LOG_FILE
-  declare -l OUTPUT
+  declare -l PERM_NO_OUTPUT_INFO
   LOG_FILE=${LOG_DIR}/${TIMESTAMP}.log
   PERM_NO_OUTPUT_INFO="\n$%s(NOTE: No output means that there was nothing to change.)%s\n" "$(s yellow)" "$(s off)"
 
@@ -394,27 +563,28 @@ dr_permission_repair() {
   find web/* -type f -exec sudo chmod -c u=rw,g=r,o= '{}' + | tee ${LOG_FILE}
   
   # Loop through all web/sites/(*sub dirs) having another sub dir files/ in it.
+  declare -l d
   for d in web/sites/*/files
   do
     printf "\nCorrect%s $d%s directory owner/group to%s www-data:your-user and rwx%s " "$(s blue)" "$(s off)" "$(s yellow)" "$(s off)"
     printf "to both in the next step. %s" "${PERM_NO_OUTPUT_INFO}" ; CONFIRM
-    sudo chown -c www-data:"${USER}" $d | tee ${LOG_FILE}
-    sudo chmod -c ug=rwx,o= $d | tee ${LOG_FILE}
+    sudo chown -c www-data:"${USER}" "$d" | tee ${LOG_FILE}
+    sudo chmod -c ug=rwx,o= "$d" | tee ${LOG_FILE}
 
     printf "\nCorrect%s all sub directories%s inside of%s $d%s to%s ug=rwx,o=%s " "$(s green)" "$(s off)" "$(s blue)" "$(s off)" "$(s yellow)" "$(s off)"
     printf "in the next step. %s" "${PERM_NO_OUTPUT_INFO}" ; CONFIRM
-    find $d -type d -exec sudo chmod -c ug=rwx,o= '{}' + | tee ${LOG_FILE}
+    find "$d" -type d -exec sudo chmod -c ug=rwx,o= '{}' + | tee ${LOG_FILE}
 
     printf "\nCorrect%s files%s inside of%s $d%s directory to%s ug=rw,o=%s " "$(s green)" "$(s off)" "$(s blue)" "$(s off)" "$(s yellow)" "$(s off)"
     printf "in the next step. %s" "${PERM_NO_OUTPUT_INFO}" ; CONFIRM
-    find $d -type f -exec sudo chmod -c ug=rw,o= '{}' + | tee ${LOG_FILE}
+    find "$d" -type f -exec sudo chmod -c ug=rw,o= '{}' + | tee ${LOG_FILE}
 
     printf "\nLet's check if you have any%s suspicious php-files%s in your%s $d%s " "$(s yellow)" "$(s off)" "$(s blue)" "$(s off)"
     printf "directory. %s" "${PERM_NO_OUTPUT_INFO}" ; CONFIRM
-    if [[ -n $(find $d -type f -name "*.php*") ]] ; then
+    if [[ -n $(find "$d" -type f -name "*.php*") ]] ; then
       printf "\n%sWarning:%s found some%s php files%s!\n" "$(s red)" "$(s off)" "$(s yellow)" "$(s off)" | tee ${LOG_FILE}
     else
-      printf "%sNo suspicious php files found.%s\n" "$(s green)" "$(s off)" | tee ${LOGFILE}
+      printf "%sNo suspicious php files found.%s\n" "$(s green)" "$(s off)" | tee ${LOG_FILE}
     fi
   done
 
@@ -426,103 +596,62 @@ dr_permission_repair() {
   ls -ahl ${LOG_DIR}
 }
 
-dr_install () {
-  set -e
-  # dr_composer_extension_info_routine info
-  dr_composer_routine require
-  dr_drush_routine pm-install
-  dr_drush_cache_clear
-  set +e
-}
-
-dr_update () {
-  dr_drush_cron_run
-  dr_composer_extension_info_routine info
-  dr_composer_routine update -W
-  dr_drush_updb
-  dr_drush_cache_clear
-}
-
-dr_update_all () {
-  MULTI_CHOICE "update all, drupal only, interactive" "a/d/i"
-  case "${REPLY}" in
-    a)
-      composer update */* -W
-      ;;
-    d)
-      composer update drupal/* -W
-      ;;
-    i)
-      composer update --interactive
-      ;;
-    *)
-      WRONG_INPUT
-      ;;
-  esac
-  dr_drush_updb
-  dr_drush_cache_clear
-}
-
-dr_remove () {
-  set -e
-  dr_drush_routine pm-uninstall
-  dr_composer_routine remove
-  dr_drush_cache_clear
-  set +e
-}
-
-dr_info () {
-  dr_composer_extension_info_routine info
-  dr_drush_extension_info_routine
-}
-
 dr_status () {
-  dr_composer_status
-  dr_drush_status
+  dr_manage_extensions_composer_update_status
+  dr_manage_project_drush_status
+}
+
+dr_prepare_backup () {
+  declare -g bkp_timestamp
+  declare -g bkp_path
+  bkp_timestamp=$(date '+%y%m%d_%H%M%S')
+  bkp_path="../${PWD##*/}_bkp"
+  read -p "Type your absolute backup path including target dir (f.e. /var/www/.../mybkp) Leave empty for default: ${bkp_path} "
+  [ ! -z "${REPLY// }" ] && bkp_path="${REPLY}"
+  mkdir -p "${bkp_path}"
 }
 
 dr_backup () {
   set -e
   set -x
   dr_drush_cache_clear
-  timestamp=$(date '+%y%m%d_%H%M%S')
-  bkp_path="../${PWD##*/}_bkp"
-  read -p "Type your absolute backup path including target dir (f.e. /var/www/.../mybkp) Leave empty for default: ${bkp_path} "
-  [ ! -z "${REPLY// }" ] && bkp_path="${REPLY}"
-  mkdir -p "${bkp_path}"
-  MULTI_CHOICE "backup all (a - default), database only (f), or files only (d)?" "a|d|f"
+  dr_prepare_backup
+  MULTI_CHOICE "backup all (a - default), database only (d), or files only (f)?" "a|d|f"
   if [ "${REPLY}" == "f" ] ; then
     dr_backup_files
   elif [ "${REPLY}" == "d" ] ; then
     dr_backup_database
   else
-    CONFIRM_GO "Flush all image styles" dr_drush_flush_image_styles
+    dr_drush_flush_image_styles
     dr_backup_files
     dr_backup_database
   fi
-  printf "Backup finished. Backup-Folder overview:\n $(ls -lh ${bkp_path})"
+  printf "Backup finished. Backup-Folder overview:\n %s" "$(ls -lh ${bkp_path})"
   set +e
   set +x
 }
  
 dr_backup_files () {
-  tar cvfz ${bkp_path}/${timestamp}.tar.gz ./ >${bkp_path}/${timestamp}.log 2>&1
+  tar cvfz "${bkp_path}"/"${bkp_timestamp}".tar.gz ./ >"${bkp_path}"/"${bkp_timestamp}.log" 2>&1
 }
+
 dr_backup_database () {
-  drush sql:dump > ${bkp_path}/${timestamp}.sql
-  tar cvfz ${bkp_path}/${timestamp}_sql.tar.gz ${bkp_path}/${timestamp}.sql
-  rm ${bkp_path}/${timestamp}.sql
+  drush sql:dump > ${bkp_path}/${bkp_timestamp}.sql
+  tar cvfz "${bkp_path}"/"${bkp_timestamp}_sql.tar.gz" "${bkp_path}"/"${bkp_timestamp}.sql"
+  rm "${bkp_path}"/"${bkp_timestamp}.sql"
 }
 
 dr_mysql_db_install () {
   set -e
-  read -p "dbadmin:" dbadmin;
-  read -p "dbadminpw:" dbadminpw;
+  read -p "dbadmin:" dbadmin
+  read -p "dbadminpw:" dbadminpw
   read -p "db:" db;
-  read -p "dbuser:" dbuser;
+  read -p "dbuser:" dbuser
   printf "Generate a list of passwords with pwgen (if not installed: apt-get install pwgen) and copy one for next step.\n\n"
   pwgen 23
-  read -p "dbuserpw:" dbuserpw;
+  read -p "dbuserpw:" dbuserpw
+  printf "\n\nKeep the previous login data for the user and the new database copied somewhere in case you install Drupal in the next step."
+  printf "Sadly there is no way yet to hand over this db user and password to Drush while site install.\n\n"
   mysql -u ${dbadmin} -p${dbadminpw} -e "CREATE database ${db}; \
   CREATE USER IF NOT EXISTS '${dbuser}'@'localhost' IDENTIFIED BY '${dbuserpw}'; \
   GRANT ALL PRIVILEGES ON ${db}.* TO '${dbuser}'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES;"
@@ -530,9 +659,24 @@ dr_mysql_db_install () {
 }
 
 dr_project_install () {
-  timestamp=$(date '+%y%m%d_%H%M%S')
-  [ -z "${1}" ] && drupal_version="" || drupal_verion=":${1}"
-  [ -z "${2}" ] && drupal_install_dir="drupal_${timestamp}" || drupal_install_dir="${2}"
+  declare -l pi_timestamp
+  declare -l drupal_version
+  declare -l drupal_install_dir
+  drupal_version="$1"
+  drupal_install_dir="$2"
+  pi_timestamp=$(date '+%y%m%d_%H%M%S')
+
+  if [ -z "${drupal_install_dir}" ] ; then
+    # we have only 1 or 0 arguments | install dir is unknown yet.
+    drupal_install_dir="drupal_${pi_timestamp}"
+    read -p "Choose a name for install directory (leave empty for default ${drupal_install_dir}): " drupal_install_dir
+    if [ -z "${drupal_version}" ] ; then
+      # we definitely have no arguments since $1 is missing too.
+      drupal_version=""
+      read -p "Choose a Drupal version 9/10/11 (leave empty for default latest-stable): " drupal_version
+    fi
+  fi
+
   set -e
   set -x
   composer create-project drupal/recommended-project${drupal_version} ${drupal_install_dir}
@@ -540,13 +684,13 @@ dr_project_install () {
   ls -ahL
   composer require drush/drush
   mkdir web/sites/default/files
-  # cp web/sites/default/default.settings.php web/sites/default/settings.php
   dr_mysql_db_install
-  drush si
+  drush si --db-su=$dbadmin --db-su-pw=$dbadminpw
   set +e
   set +x
 }
 
+# final init and run.
 dr_init
 dr_exec "$@"
 
