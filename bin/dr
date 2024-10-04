@@ -1,10 +1,10 @@
 #!/bin/bash
-#
-#####################################################################
-# @author: dqd (formerly diqidoq)
-# @license: GPLv3
-# @see [dr on Github](https://github.com/diqidoq/dr).
-#####################################################################
+
+#######################################################
+# @author: dqd (formerly diqidoq)                     #
+# @license: GPLv3                                     #
+# @see [dr on Github](https://github.com/diqidoq/dr). #
+#######################################################
 
 # @function dr_init
 # @description initializes <dr> with primary settings and command line dialog strings.
@@ -12,29 +12,28 @@ dr_init () {
   # @function s()
   # @description Set up styles for command line output in POSIX compatible way.
   # @arg $1 color names like red blue yellow
-  # @example
-  #     printf "This will format %s this part of string in red." "$(s red)"
+  # @example: printf "This will format %s this part of string in red." "$(s red)"
   # @exit code 1 if arg unknown
   s () (
     offset=0
     for option in "$@"; do
-        code=
-        case $option in
-            foreground|fg) offset=0 ;;
-            background|bg) offset=10 ;;
-            default|normal|off|reset) code=0 ;;
-            bold) code=1 ;;
-            underline) code=4 ;;
-            black) code=30 ;;
-            red) code=31 ;;
-            green) code=32 ;;
-            yellow) code=33 ;;
-            blue) code=34 ;;
-            magenta) code=35 ;;
-            cyan) code=36 ;;
-            white) code=37 ;;
-            *) code=error ;;
-        esac
+      code=
+      case $option in
+        foreground|fg) offset=0 ;;
+        background|bg) offset=10 ;;
+        default|normal|off|reset) code=0 ;;
+        bold) code=1 ;;
+        underline) code=4 ;;
+        black) code=30 ;;
+        red) code=31 ;;
+        green) code=32 ;;
+        yellow) code=33 ;;
+        blue) code=34 ;;
+        magenta) code=35 ;;
+        cyan) code=36 ;;
+        white) code=37 ;;
+        *) code=error ;;
+      esac
         [ -z "$code" ] && continue
         [ "$code" = error ] && {
             printf %s\\n "unknown option: $option" >&2
@@ -43,7 +42,7 @@ dr_init () {
         [ "$code" -ge 30 ] && code="$((code+offset))"
         printf \\033\[%sm "$code"
     done
-)
+  )
 
   # Check type of shell variable. Good for debugging or required conditions
   type_of_var () {
@@ -74,42 +73,49 @@ dr_init () {
   SKIP () { printf "\nOk. %sSkipped%s for now.\n\n" "$(s yellow)" "$(s off)"; }
   ABORT () { printf "\n%sAbort script%s for now.\n\n"  "$(s yellow)" "$(s off)"; exit 1 ; }
   IN_PROGRESS () { printf "This feature is unsupported yet but in progress." ; ABORT ; }
-  COMPLETED () { printf "%s\nDone!\n\n" "$(s green)"; }
+  COMPLETED () { printf "%s\nDone!\n\n" "$(s green)" ; }
   WRONG_INPUT () { printf "\n%sWrong%s input!\n" "$(s red)" "$(s off)"; dr_help ; ABORT ; }
-  STOP_ERROR () { printf "\n%sError: Stopped installation command!%s\n\n" "$(s red)" "$(s off)"; }
-  PRESS_ENTER () { printf "[Press %sENTER%s or %sRETURN%s to go ahead. %sPRESS %sCTRL/C%s to stop]"\
-                  "$(s green)" "$(s off)" "$(s green)" "$(s off)" "$(s cyan)" "$(s bold underline)" "$(s off)"; }
-  COMMAND_NOT_FOUND () { printf "\n %s%s%s \n %s could not be found. Is it installed?\n\n" "$(s yellow)" "${STOP_ERROR}" "$(s off)" "${1}" ; }
+  STOP_ERROR () { printf "\n%sError: Stopped installation command!%s\n\n" "$(s red)" "$(s off)" ; }
+  PRESS_ENTER () {
+    printf "[Press %sENTER%s or %sRETURN%s to go ahead. %sPRESS %sCTRL/C%s to stop]"\
+    "$(s green)" "$(s off)" "$(s green)" "$(s off)" "$(s cyan)" "$(s bold underline)" "$(s off)"
+  }
+  COMMAND_NOT_FOUND () {
+    printf "\n %s%s%s \n %s could not be found. Is it installed?\n\n" "$(s yellow)" "${STOP_ERROR}" "$(s off)" "${1}"
+  }
   ARGUMENTS_INPUT_NOTE () {
-    printf "You provided %s%s%s via%s input arguments%s (not via a file). - " "$(s green)" "${ITEMS_TYPE}" "$(s off)" "$(s green)" "$(s off)";
-    printf "Start parsing..." ; }
+    printf "You provided %s%s%s via%s input arguments%s (not via a file). - " "$(s green)" "${ITEMS_TYPE}" "$(s off)" "$(s green)" "$(s off)"
+    printf "Start parsing..."
+  }
   ARGUMENTS_INPUT_SEPARATED_WARNING () {
     printf "\n%sAttention:%s Seems that you used%s comma separated multiple arguments.%s\n" "$(s yellow)" "$(s off)" "$(s yellow)" "$(s off)"
     printf "Some users use comma and/or space, some not. "
     printf "We will check and repair this."
   }
-  ARGUMENTS_NOT_FOUND () { printf "\n\n%sArguments Count: %s0%s - %sNo arguments%s provided.\n\n" "${STOP_ERROR}" "$(s yellow)" "$(s off)" "$(s yellow)" "$(s off)" ; }
+  ARGUMENTS_NOT_FOUND () {
+    printf "\n\n%sArguments Count: %s0%s - %sNo arguments%s provided.\n\n" "${STOP_ERROR}" "$(s yellow)" "$(s off)" "$(s yellow)" "$(s off)"
+  }
   COMPOSER_INSTALL_INFO () {
     printf "\nMake sure you have a local or global composer installed.\n"
     printf "The simplest is to follow the steps outlined here: https://getcomposer.org/download/\n"
   }
   DRUSH_INSTALL_INFO () {
     printf "\nMake sure you have a local %sDrush%s%s and a global Drush Launcher installed%s
-or any other Drush detection method like recommended in the installation README of -dr-.\n" "$(s red)" "$(s off)" "$(s red)" "$(s off)" ;
+or any other Drush detection method like recommended in the installation README of -dr-.\n" "$(s red)" "$(s off)" "$(s red)" "$(s off)"
     printf "\nIf you have Drush installed (default is -installed- when using dr to install Drupal),
 and a launcher is missing, then you need to run with admin permissions:\n"
     printf "%s curl -o %s/usr/local/bin/drush \
-https://raw.githubusercontent.com/tvlooy/drush-launcher/master/drush %s\n" "$(s yellow)" "$(s green)" "$(s off)" ;
+https://raw.githubusercontent.com/tvlooy/drush-launcher/master/drush %s\n" "$(s yellow)" "$(s green)" "$(s off)"
     printf "%s chmod +x %s/usr/local/bin/drush%s\n
-   ...to have drush command without vendor path available.\n" "$(s yellow)" "$(s green)" "$(s off)" ;
+   ...to have drush command without vendor path available.\n" "$(s yellow)" "$(s green)" "$(s off)"
   }
   COMPOSER_JSON_NOT_FOUND () {
     printf "\nAre we in the%s proper Composer init root%s?\n" "$(s yellow)" "$(s off)"
-    printf "A%s composer.json%s file does not exist here in path.\n\n%s"  "$(s green)" "$(s off)" "${STOP_ERROR}";
+    printf "A%s composer.json%s file does not exist here in path.\n\n%s"  "$(s green)" "$(s off)" "${STOP_ERROR}"
   }
   DRUPAL_ROOT_NOT_FOUND () {
     printf "\n%s\nAre we in a Drupal project root? A %s/*/core%s directory%s does not exist%s on \
-second level in path.\n\n" "${STOP_ERROR}" "$(s green)" "$(s off)" "$(s red)" "$(s off)" ;
+    second level in path.\n\n" "${STOP_ERROR}" "$(s green)" "$(s off)" "$(s red)" "$(s off)"
   }
   PERMISSION_REPAIR_INFO () {
     printf "\nBased on the%s following links%s:\n" "$(s green)" "$(s off)"
@@ -119,16 +125,18 @@ second level in path.\n\n" "${STOP_ERROR}" "$(s green)" "$(s off)" "$(s red)" "$
     printf "https://bit.ly/3Dwimkx\n"
     printf "...I repair%s Drupal directories%s and%s file permissions%s now recursively.\n\n" "$(s green)" "$(s off)" "$(s green)" "$(s off)"
   }
-
+  PERM_NO_OUTPUT_INFO () {
+    printf "\n(NOTE: %sNo output means that there was nothing to change%s.)\n" "$(s green)" "$(s off)"
+  }
   # @todo Which we can change programmatically on respective different tasks later.
   ITEMS_TYPE="extension(s)"
 }
 
 dr_help () {
-printf "\n%sHELP%s - look at these case statements to understand the <dr> commands.\n" "$(s yellow)" "$(s green)"
-echo '--------------------------------------------------------------------'
-printf "\n\n"
-declare -f dr_exec
+  printf "\n%sHELP%s - look at these case statements to understand the <dr> commands.\n" "$(s yellow)" "$(s green)"
+  echo '--------------------------------------------------------------------'
+  printf "\n\n"
+  declare -f dr_exec
 }
 
 dr_command_check () {
@@ -182,6 +190,15 @@ dr_exec () {
       shift
       dr_manage_extensions drupal module install "$@"
       ;;
+    -ti)
+      # Install for selected Drupal themes | short link dri.
+      # takes @arguments after case -switch identifier and needs @shift
+      dr_drupal_root_check
+      dr_composer_check
+      dr_drush_check
+      shift
+      dr_manage_extensions drupal theme install "$@"
+      ;;
     -r)
       # Uninstall & remove selected Drupal modules | short link: drr.
       # takes @arguments after case -switch identifier and needs @shift
@@ -190,6 +207,15 @@ dr_exec () {
       dr_drush_check
       shift
       dr_manage_extensions drupal module uninstall "$@"
+      ;;
+    -tr)
+      # Uninstall & remove selected Drupal themes | short link: drr.
+      # takes @arguments after case -switch identifier and needs @shift
+      dr_drupal_root_check
+      dr_composer_check
+      dr_drush_check
+      shift
+      dr_manage_extensions drupal theme uninstall "$@"
       ;;
     -c)
       # Checkout info for selected modules | short link: drc.
@@ -332,8 +358,7 @@ dr_validate_input_extension_list () {
   fi
 }
 
-# @use dr_validate_input_extension_list
-# to get validated user input
+# @uses dr_validate_input_extension_list() to get validated user input
 # prints to $input_arguments_array
 dr_parse_input_extension_list () {
   declare -l input_arguments
@@ -534,7 +559,7 @@ dr_drush_updb () {
 }
 
 dr_permission_repair() {
-  PREMISSION_REPIAR_INFO
+  PERMISSION_REPAIR_INFO
   # Prepare variables like
   # base_dir, logging directory, LOGFILE and timestamp.
   #
@@ -546,9 +571,7 @@ dr_permission_repair() {
   LOG_DIR=permission_repair_logs
   mkdir -p ${LOG_DIR}
   declare -l LOG_FILE
-  declare -l PERM_NO_OUTPUT_INFO
   LOG_FILE=${LOG_DIR}/${TIMESTAMP}.log
-  PERM_NO_OUTPUT_INFO="\n$%s(NOTE: No output means that there was nothing to change.)%s\n" "$(s yellow)" "$(s off)"
 
   printf "\nWill %s(re)set user and group%s of%s all folders%s and%s files%s to \n" "$(s green)" "$(s off)" "$(s blue)" "$(s off)" "$(s blue)" "$(s off)"
   printf "%s:www-data first. %s" "${USER}" "${PERM_NO_OUTPUT_INFO}" ; CONFIRM
