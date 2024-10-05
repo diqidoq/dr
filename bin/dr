@@ -655,7 +655,8 @@ dr_backup () {
 }
  
 dr_backup_files () {
-  tar cvfz "${bkp_path}"/"${bkp_timestamp}".tar.gz ./ >"${bkp_path}"/"${bkp_timestamp}.log" 2>&1
+  dr_permission_repair
+  sudo tar cvfz "${bkp_path}"/"${bkp_timestamp}".tar.gz ./ >"${bkp_path}"/"${bkp_timestamp}.log" 2>&1
 }
 
 dr_backup_database () {
